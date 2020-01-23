@@ -7,9 +7,8 @@ local LIGHTS = {
   SMALL = 0;
 }
 
--- ChangeLightState updates a given light state based on the status. The
--- light is the led which is being set. use .LARGE or .SMALL. The status
--- is a boolean expression for on or off. (true for on.)
+-- ChangeLightState updates a given light state based on the status. The light is the led which is
+-- being set. use .LARGE or .SMALL. The status is a boolean expression for on or off. (true for on.)
 local function changeLightState(light, status)
   local mode = gpio.HIGH
 

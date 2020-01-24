@@ -2,6 +2,7 @@
 
 local lights = require("lights")
 local internet = require("internet")
+local twitch = require("twitch")
 
 -- Turns on the large LED on and off followed by turning on the small LED on and off again.
 local function lightChange()
@@ -26,12 +27,22 @@ local function lightLoop(milliseconds)
   lightTimer:start()
 end
 
+local function on_internet_connect()
+  twitch.channel = "gamesdonequick"
+  twitch.on_private_message = function (channel, params)
+    lightChange()
+  end
+
+  twitch.connect()
+end
+
+local function on_internet_disconnect()
+ print("disconnected")
+end
+
 local function main()
   internet.configure("Stephen", "password")
-
-  internet.connect(
-    function (T) print("connected") end,
-    function () print("disconnected") end)
+  internet.connect(on_internet_connect, on_internet_disconnect)
 end
 
 main()

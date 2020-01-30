@@ -1,48 +1,34 @@
--- MODULE DOCS: https://nodemcu.readthedocs.io/en/master/modules
 
-local lights = require("lights")
-local internet = require("internet")
-local twitch = require("twitch")
+local pwms = require("pwms")
 
--- Turns on the large LED on and off followed by turning on the small LED on and off again.
-local function lightChange()
-  lights.changeLightState(lights.LARGE, true)
-  lights.changeLightState(lights.LARGE, false)
+-- Used to determine the directional action of the led breathing affect.
+local direction = true
 
-  lights.changeLightState(lights.SMALL, true)
-  lights.changeLightState(lights.SMALL, false)
-end
+-- Triggers a e.g breathing affect on a pwm pin by shifting the duty up and down the bounds of the
+-- chip limit. If the duty is currently lower than or equal to 0, then processed to increase it up
+-- to the chips duty limit. If the limit is hit, reverse the process until 0 again. incrementing in
+-- steps of 20.
+local function led_breathing_effect()
+  print("shifting duty: " .. pwms.get_duty())
 
--- Marks both lights (small and large) as constantly on.
-local function lightConstantOn()
-  lights.changeLightState(lights.LARGE, true)
-  lights.changeLightState(lights.SMALL, true)
-end
-
--- lightLoop creates a timer based on the specified time and calls into light change on each tick
--- (time) and then restarting the timer after each tick.
-local function lightLoop(milliseconds)
-  local lightTimer = tmr.create()
-  lightTimer:register(milliseconds, 1, lightChange)
-  lightTimer:start()
-end
-
-local function on_internet_connect()
-  twitch.channel = "gamesdonequick"
-  twitch.on_private_message = function (channel, params)
-    lightChange()
+  if pwms.get_duty() <= 0 then
+    direction = true
+  elseif pwms.get_duty() >= pwms.duty_cycle_limit then
+    direction = false
   end
 
-  twitch.connect()
-end
-
-local function on_internet_disconnect()
- print("disconnected")
+  if direction then
+    pwms.update_duty(pwms.get_duty() + 20)
+  else
+    pwms.update_duty(pwms.get_duty() - 20)
+  end
 end
 
 local function main()
-  internet.configure("Stephen", "password")
-  internet.connect(on_internet_connect, on_internet_disconnect)
+  pwms.configure(3, 500, pwms.duty_cycle_limit, true)
+
+  local pwm_timer = tmr.create()
+  pwm_timer:alarm(200, tmr.ALARM_AUTO, led_breathing_effect)
 end
 
 main()

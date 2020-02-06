@@ -4,6 +4,7 @@
         "wifi",
         "websocket",
         "pwm",
-        "tmr"
+        "tmr",
+        "dht"
     ]
 }

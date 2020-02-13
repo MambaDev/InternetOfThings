@@ -5,23 +5,32 @@ function Button:create(pin, press, long_press, released)
   local this = {
     -- The pin number of the button pin executing_pin = pin;
     executing_ping = pin;
+
     -- The reference to the global GPIO object.
     GPIO = gpio;
+    
     -- when the button is pressed call, method
     on_press = press;
+
     -- called when the button is then released.
     on_released = released;
+
     -- when the button is pressed for a long time, method
     on_long_press = long_press;
+
     -- if the button is currently pressed or not (1, 0)
     pressed = 0;
+
     -- pressed timer
     my_timer_pressed = tmr.create();
+
     -- how many iterations that the press is held, used to determine if the given button is being
     -- pressed for a long press or not.
     pressed_iteration_count = 0;
+
     -- if long pressed or not.
     long_pressed = 0;
+
     -- how many iterations are classed as a long press
     long_pressed_iteration = 5;
   }

@@ -27,10 +27,6 @@ local function trilateration_test()
   end
 end
 
-local function test()
-  trilateration_test()
-end
-
 -- ######################
 -- ToA - Time Of Arrival
 -- 
@@ -102,6 +98,10 @@ end
 --  Potisions of APs should be stable
 local function received_signal_strength_indication(n, d, R)
   return -(10 * n * math.log(d, 10) + R)
+end
+
+local function test()
+  trilateration_test()
 end
 
 M.starts_with = starts_with

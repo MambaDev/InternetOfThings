@@ -1,7 +1,7 @@
 Button = {}
 Button.__index = Button
 
-function Button:create(pin, press, long_press, released)
+function Button:create(pin, press, long_press, released, long_press_delay)
   local this = {
     -- The pin number of the button pin executing_pin = pin;
     executing_ping = pin;
@@ -32,7 +32,7 @@ function Button:create(pin, press, long_press, released)
     long_pressed = 0;
 
     -- how many iterations are classed as a long press
-    long_pressed_iteration = 5;
+    long_pressed_iteration = 10;
   }
 
   setmetatable(this, Button)
@@ -41,6 +41,17 @@ function Button:create(pin, press, long_press, released)
   -- related data to the button, since its pointless without the pin.
   if this.executing_pin == nil then
     return this;
+  end
+
+  -- The fallback iteration count for if the provided  long_press_delay is nil.
+  local fallback_long_pressed_iteration = this.long_pressed_iteration
+  this.long_pressed_iteration = long_press_delay
+
+  -- if a long press iteration has not been provided and the given value is nil, then fall back to
+  -- the of 10 iterations of 100 milliseconds (1 second) for determing that the button is classed as
+  -- a long pressed.
+  if this.long_pressed_iteration == nil then
+    this.long_pressed_iteration = fallback_long_pressed_iteration
   end
 
   -- Setup the executing pin ready for button input.

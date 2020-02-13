@@ -21,7 +21,7 @@ end
 
 
 local function main()
- button = bbutton:create(7, button_pressed, button_long_pressed, button_released)
+ button = bbutton:create(7, button_pressed, button_long_pressed, button_released, nil)
 end
 
 main()

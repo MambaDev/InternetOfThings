@@ -1,27 +1,32 @@
 
-local ddht = require("ddht")
-local bbutton = require("button")
+local internet = require("internet")
 
--- the local button being pressed.
-local button = nil;
+local function on_internet_connected()
+  print("internet connected")
 
-local function button_pressed()
-  -- increase the brightness throughout a iteration cycle.
-  print("BUTTON PRESSED")
+  internet.get_station_access_point(function (t)
+    -- (SSID : Authmode, RSSI, BSSID, Channel)
+    print("\n"..string.format("%32s","SSID").."\tBSSID\t\t\t\t RSSI\t\tAUTHMODE\tCHANNEL")
+
+     --RSSI here will be picked
+    for ssid,v in pairs(t) do
+      local authmode, rssi, bssid, channel = string.match(v, "([^,]+),([^,]+),([^,]+),([^,]+)")
+      print(string.format("%32s",ssid).."\t"..bssid.."\t "..rssi.."\t\t"..authmode.."\t\t\t"..channel)
+    end
+  end)
+
+  print("AP IP:" .. internet.get_access_point_ip())
+  print("AP MAC:" .. internet.get_access_point_mac())
+  print("STA MAC:" .. internet.get_station_mac())
 end
 
-local function button_long_pressed()
-  -- turn on or off the led
-  print("BUTTON LONG PRESSED")
+local function on_internet_disconnected()
+  print("internet disconnected")
 end
-
-local function button_released()
-  print("BUTTON RELEASED")
-end
-
 
 local function main()
- button = bbutton:create(7, button_pressed, button_long_pressed, button_released, nil)
+  internet.configure_station_ap("Stephen", "password", "stephenNodeMCU", "12345")
+  internet.connect(on_internet_connected, on_internet_disconnected)
 end
 
 main()

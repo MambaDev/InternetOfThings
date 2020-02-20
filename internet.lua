@@ -5,9 +5,24 @@ local M = {
 -- configure sets up the events and handlers to ensure that we know when and if we are currently
 -- connected or not. Which can later be used to simlify the setup and connection of sockets, http
 -- clients and other systems.
-local function configure(ssid, password)
+local function configure_station(ssid, password)
   wifi.setmode(wifi.STATION)
   wifi.sta.config({ssid=ssid, pwd=password, auto=false}) -- don't auto connect when we setup the conneciton details.
+end
+
+-- configures and setups the device to be used as a access point. With the access name and password
+-- being specifid.
+local function configure_soft_ap(ssid, password)
+  wifi.setmode(wifi.SOFTAP)
+  wifi.ap.config({ssid=ssid, pwd=password, auth=wifi.WPA2_PSK}) -- don't auto connect when we setup the conneciton details.
+end
+
+-- setup the device to be configured as a station and a access point. specifying both the station
+-- ssid/password and the access point ssid/passowrd
+local function configure_station_ap(station_ssid, station_password, ap_ssid, ap_password)
+  wifi.setmode(wifi.STATIONAP)
+  wifi.sta.config({ssid=station_ssid, pwd=station_password, auto=false}) -- don't auto connect when we setup the conneciton details.
+  wifi.ap.config({ssid=ap_ssid, pwd=ap_password,  auth=wifi.WPA2_PSK})
 end
 
 -- connect will attemp to make a connection to the Internet.connection, returning if no connection
@@ -15,7 +30,7 @@ end
 -- expression would be returned. connectedCallback is a function which will be called when the
 -- Internet.connection is conencted. disconnectedCallback is a function which will be called when
 -- the Internet.connection failed to connect.
-local function connect(connectedCallback, failedCallback)
+local function connect_station(connectedCallback, failedCallback)
   wifi.sta.connect()
 
   if connectedCallback ~= nil then
@@ -25,16 +40,42 @@ local function connect(connectedCallback, failedCallback)
   if failedCallback ~= nil then
     wifi.eventmon.register(wifi.eventmon.STA_DISCONNECTED, failedCallback)
   end
-
 end
 
 -- getip is just a short hand notation for getting the ip from the wifi sta module.
-local function getip()
+local function get_station_ip()
   return wifi.sta.getip()
 end
 
-M.configure = configure
-M.connect = connect
-M.getip = getip
+-- gets the station connection mac address
+local function get_station_mac()
+  return wifi.sta.getac()
+end
+
+local function get_access_point_ip()
+  return wifi.ap.getip()
+end
+
+-- gets the access point mac address
+local function get_access_point_mac()
+  return wifi.ap.getac()
+end
+
+-- gets the current station connection access point. requires the passing of the callback method
+-- which will be called with the list of acceess points.
+local function get_station_access_point(ap_list_calback)
+  wifi.sta.getap(ap_list_calback)
+end
+
+M.configure_soft_ap = configure_soft_ap
+M.configure_station_ap = configure_station_ap
+M.get_access_point_mac = get_access_point_mac
+M.get_access_point_ip = get_access_point_ip
+
+M.configure_station = configure_station
+M.connect_station = connect_station
+M.get_station_mac = get_station_mac
+M.get_station_access_point = get_station_access_point
+M.get_station_ip = get_station_ip
 
 return M

@@ -49,7 +49,7 @@ end
 
 -- gets the station connection mac address
 local function get_station_mac()
-  return wifi.sta.getac()
+  return wifi.sta.getmac()
 end
 
 local function get_access_point_ip()
@@ -58,7 +58,7 @@ end
 
 -- gets the access point mac address
 local function get_access_point_mac()
-  return wifi.ap.getac()
+  return wifi.ap.getmac()
 end
 
 -- gets the current station connection access point. requires the passing of the callback method

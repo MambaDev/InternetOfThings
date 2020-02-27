@@ -6,7 +6,7 @@ local internet = require("internet")
 -- ##############################
 
 local function on_tcp_connection(connection, s)
-  print("connected ")
+  print("tcp connection connected")
 
   local hello_timer = tmr.create()
 
@@ -15,12 +15,8 @@ local function on_tcp_connection(connection, s)
   end)
 end
 
-local function on_tcp_disconnection(error_code)
-  print("disconnected " .. error_code)
-end
-
-local function on_tcp_reconnection(error_code)
-  print("reconnected " .. error_code)
+local function on_tcp_disconnection(connection, error_code)
+  print("tcp connection disconnected or failed to connect, reason: " .. error_code)
 end
 
 local skip_headers
@@ -69,21 +65,21 @@ end
 local tcp_client = nil
 
 local function on_internet_connected(data)
-  print("STA CONNECTED:" .. data.SSID)
+  print("station connected, getting ip address: " .. data.SSID)
 end
 
 local function on_internet_got_ip()
-  print("STA MAC: " .. internet.get_station_mac())
-  print("STA STATUS: " .. internet.get_station_status())
+  print("station ip address gathered: " .. internet.get_station_ip())
+  print("station mac address: " .. internet.get_station_mac())
+  print("station status: " .. internet.get_station_status())
 
   tcp_client = net.createConnection(net.TCP, 0)
 
   tcp_client:on("connection", on_tcp_connection)
   tcp_client:on("disconnection", on_tcp_disconnection)
-  tcp_client:on("reconnection", on_tcp_reconnection)
   tcp_client:on("receive", on_tcp_receive)
 
-  print("attempting tcp connection")
+  print("attempting tcp connection to: 192.168.1.65:80")
   tcp_client:connect(80, "192.168.1.65")
 end
 

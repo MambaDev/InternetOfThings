@@ -5,6 +5,7 @@
         "websocket",
         "pwm",
         "tmr",
-        "dht"
+        "dht",
+        "net"
     ]
 }

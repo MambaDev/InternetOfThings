@@ -5,9 +5,9 @@ local M = {
 -- configure sets up the events and handlers to ensure that we know when and if we are currently
 -- connected or not. Which can later be used to simlify the setup and connection of sockets, http
 -- clients and other systems.
-local function configure_station(ssid, password)
+local function configure_station(ssid, password, bssid)
   wifi.setmode(wifi.STATION)
-  wifi.sta.config({ssid=ssid, pwd=password, auto=false}) -- don't auto connect when we setup the conneciton details.
+  wifi.sta.config({ssid=ssid, pwd=password, auto=false, bssid=bssid}) -- don't auto connect when we setup the conneciton details.
 end
 
 -- configures and setups the device to be used as a access point. With the access name and password
@@ -30,21 +30,30 @@ end
 -- expression would be returned. connectedCallback is a function which will be called when the
 -- Internet.connection is conencted. disconnectedCallback is a function which will be called when
 -- the Internet.connection failed to connect.
-local function connect_station(connectedCallback, failedCallback)
+local function connect_station(connectedCallback, ipCallback, failedCallback)
   wifi.sta.connect()
 
   if connectedCallback ~= nil then
     wifi.eventmon.register(wifi.eventmon.STA_CONNECTED, connectedCallback)
   end
 
+  if ipCallback  ~= nil then
+    wifi.eventmon.register(wifi.eventmon.STA_GOT_IP, ipCallback)
+  end
+
   if failedCallback ~= nil then
     wifi.eventmon.register(wifi.eventmon.STA_DISCONNECTED, failedCallback)
   end
+
 end
 
 -- getip is just a short hand notation for getting the ip from the wifi sta module.
 local function get_station_ip()
   return wifi.sta.getip()
+end
+
+local function get_station_status()
+  return wifi.sta.status()
 end
 
 -- gets the station connection mac address
@@ -77,5 +86,6 @@ M.connect_station = connect_station
 M.get_station_mac = get_station_mac
 M.get_station_access_point = get_station_access_point
 M.get_station_ip = get_station_ip
+M.get_station_status = get_station_status
 
 return M

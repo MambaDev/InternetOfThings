@@ -1,7 +1,7 @@
-Button = {}
-Button.__index = Button
+M = {}
+M.__index = M
 
-function Button:create(pin, press, long_press, released, long_press_delay)
+function M:create(pin, press, long_press, released, long_press_delay)
   local this = {
     -- The pin number of the button pin executing_pin = pin;
     executing_ping = pin;
@@ -35,7 +35,7 @@ function Button:create(pin, press, long_press, released, long_press_delay)
     long_pressed_iteration = 10;
   }
 
-  setmetatable(this, Button)
+  setmetatable(this, M)
 
   -- If no executing pin has been provided, return back early without setting up any timers or
   -- related data to the button, since its pointless without the pin.
@@ -110,4 +110,4 @@ function Button:create(pin, press, long_press, released, long_press_delay)
   return this
 end
 
-return Button
+return M

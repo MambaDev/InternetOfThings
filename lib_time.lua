@@ -17,7 +17,17 @@ local function clock_syncronization(timer_server, sync_callback, fail_sync_callb
   sntp.sync(server, sync_callback, fail_sync_callback)
 end
 
+-- Setups a cronjob with the raw string provided. Reference related material for the structure on
+-- how to use a cron job.
+--
+-- raw_input_string (string): The raw string for the cron job.
+-- callback_function (function | nil): The callback function for the given cron job.
+local function setup_cron_job(raw_input_string, callback_function)
+  cron.schedule(raw_input_string, callback_function);
+end
+
 M.clock_syncronization = clock_syncronization;
+M.setup_cron_job = setup_cron_job;
 
 return M;
 

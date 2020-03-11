@@ -1,4 +1,3 @@
-
 local internet = require("lib_internet");
 local time = require("lib_time");
 local weather = require("lib_weather");

@@ -1,10 +1,6 @@
 
 local M  = {}
 
-local function starts_with(str, start)
-  return str:sub(1, #start) == start
-end
-
 -- # trilateration formulas to return the (x,y) intersection point of three circles
 local function trilateration(x1,y1,r1,x2,y2,r2,x3,y3,r3)
   local A = 2*x2 - 2*x1
@@ -102,5 +98,6 @@ M.time_difference_of_arrival = time_difference_of_arrival
 M.received_signal_strength_indication = received_signal_strength_indication
 
 M.test = test
+M.clock_syncronization = clock_syncronization;
 
 return M

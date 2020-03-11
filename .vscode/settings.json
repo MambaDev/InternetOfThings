@@ -6,6 +6,11 @@
         "pwm",
         "tmr",
         "dht",
-        "net"
+        "net",
+        "rtctime",
+        "sntp",
+        "cron",
+        "http",
+        "sjson"
     ]
 }

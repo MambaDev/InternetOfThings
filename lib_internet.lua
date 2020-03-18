@@ -1,5 +1,5 @@
 
-local M = {
+local INTERNET = {
 }
 
 -- configure sets up the events and handlers to ensure that we know when and if we are currently
@@ -76,16 +76,16 @@ local function get_station_access_point(ap_list_calback)
   wifi.sta.getap(ap_list_calback)
 end
 
-M.configure_soft_ap = configure_soft_ap
-M.configure_station_ap = configure_station_ap
-M.get_access_point_mac = get_access_point_mac
-M.get_access_point_ip = get_access_point_ip
+INTERNET.configure_soft_ap = configure_soft_ap
+INTERNET.configure_station_ap = configure_station_ap
+INTERNET.get_access_point_mac = get_access_point_mac
+INTERNET.get_access_point_ip = get_access_point_ip
 
-M.configure_station = configure_station
-M.connect_station = connect_station
-M.get_station_mac = get_station_mac
-M.get_station_access_point = get_station_access_point
-M.get_station_ip = get_station_ip
-M.get_station_status = get_station_status
+INTERNET.configure_station = configure_station
+INTERNET.connect_station = connect_station
+INTERNET.get_station_mac = get_station_mac
+INTERNET.get_station_access_point = get_station_access_point
+INTERNET.get_station_ip = get_station_ip
+INTERNET.get_station_status = get_station_status
 
-return M
+return INTERNET

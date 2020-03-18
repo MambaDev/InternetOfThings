@@ -1,7 +1,7 @@
-KALMAN = {}
-KALMAN.__index = KALMAN
+DDHT = {}
+DDHT.__index = DDHT
 
-function KALMAN:create(pin, sample_rate)
+function DDHT:create(pin, sample_rate)
   local this = {
     -- The pin number of the DHT sensor, cannot be 0, type of a number.
     executing_pin = pin;
@@ -18,7 +18,7 @@ function KALMAN:create(pin, sample_rate)
     sample_rate = sample_rate
   }
 
-  setmetatable(this, KALMAN)
+  setmetatable(this, DDHT)
 
   if this.sample_rate == nil then
     this.sample_rate = 2500
@@ -28,7 +28,7 @@ function KALMAN:create(pin, sample_rate)
 end
 
 -- Reads all raw data coming from any dht sensor including the dh11.
-function KALMAN:read_raw()
+function DDHT:read_raw()
   if not self.can_sample_again then
     return self.last_response
   end
@@ -38,7 +38,7 @@ function KALMAN:read_raw()
 end
 
 -- Reads raw information from all non-dht11 sensors.
-function KALMAN:read_raw_not_11()
+function DDHT:read_raw_not_11()
   if not self.can_sample_again then
     return self.last_response
   end
@@ -49,7 +49,7 @@ end
 
 -- Reads as if its a DHT11, taking the response status, temp and humdi with all its decimal values.
 -- Followed by post processing.
-function KALMAN:read()
+function DDHT:read()
   if not self.can_sample_again then
     return self.last_response
   end
@@ -60,7 +60,7 @@ end
 
 -- process_response does some post read processing, ensuring tot track the status for internal
 -- referencing and formatting the repsonse into a easily handled object over multiple properties.
-function KALMAN:process_response(status, temp, humi, temp_dec, humi_dec)
+function DDHT:process_response(status, temp, humi, temp_dec, humi_dec)
   self.last_status = status;
 
   self.last_response = {
@@ -77,7 +77,7 @@ function KALMAN:process_response(status, temp, humi, temp_dec, humi_dec)
   return self.last_response
 end
 
-function KALMAN:start_sample_timer()
+function DDHT:start_sample_timer()
   local pwm_timer = tmr.create()
   self.can_sample_again = false
 
@@ -87,29 +87,29 @@ function KALMAN:start_sample_timer()
 end
 
 -- returns true if the last sensor was ok.
-function KALMAN:is_ok()
+function DDHT:is_ok()
   return self.last_status == self.DHT.OK
 end
 
 -- returns true if the last sensor was not ok.
-function KALMAN:is_error()
+function DDHT:is_error()
   return self.last_status ~= self.DHT.OK
 end
 
 -- returns true if the sensor is reporting the data otherwise false for no real value is being
 -- reported.
-function KALMAN:is_reporting()
+function DDHT:is_reporting()
   return self.last_response ~= nil and self.last_response.temperature ~= -999 and self.last_response.humidity ~= -999
 end
 
 -- retuns the last returned status from the chip or dht module, otherwise nil.
-function KALMAN:get_status()
+function DDHT:get_status()
   return self.last_status
 end
 
 -- returns a string based message for a given status. OK, ERROR_CHECKSUM, ERROR_TIMEOUT errors.
 -- Otherwise UNKNOWN.
-function KALMAN:status_string()
+function DDHT:status_string()
   if self.last_status == self.DHT.OK then
     return "OK"
   elseif self.last_status == self.DHT.ERROR_CHECKSUM then
@@ -121,4 +121,4 @@ function KALMAN:status_string()
   return "UNKNOWN"
 end
 
-return KALMAN
+return DDHT

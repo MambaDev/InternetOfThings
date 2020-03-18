@@ -1,10 +1,10 @@
-KALMAN = {}
-KALMAN.__index = KALMAN
+BUTTON = {}
+BUTTON.__index = BUTTON
 
-function KALMAN:create(pin, press, long_press, released, long_press_delay)
+function BUTTON:create(pin, press, long_press, released, long_press_delay)
   local this = {
     -- The pin number of the button pin executing_pin = pin;
-    executing_ping = pin;
+    executing_pin = pin;
 
     -- The reference to the global GPIO object.
     GPIO = gpio;
@@ -35,7 +35,7 @@ function KALMAN:create(pin, press, long_press, released, long_press_delay)
     long_pressed_iteration = 10;
   }
 
-  setmetatable(this, KALMAN)
+  setmetatable(this, BUTTON)
 
   -- If no executing pin has been provided, return back early without setting up any timers or
   -- related data to the button, since its pointless without the pin.
@@ -67,7 +67,7 @@ function KALMAN:create(pin, press, long_press, released, long_press_delay)
   -- if the pin reading is currently presed and we are not marked as currently pressed, then mark
   -- the button as pressed and trigger the pressed event if provided.
   if pin_reading == 1 and this.pressed == 0 then
-    this.pressed = 1
+    this.pressed = 1;
 
     if this.on_press ~= nil then
       this.on_press()
@@ -105,9 +105,9 @@ function KALMAN:create(pin, press, long_press, released, long_press_delay)
   end)
 
   -- start the timer listening for the button pressed on the given pin.
-  self.my_timer_pressed:start();
+  this.my_timer_pressed:start();
 
   return this
 end
 
-return KALMAN
+return BUTTON

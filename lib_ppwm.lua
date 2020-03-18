@@ -1,7 +1,7 @@
-Ppwm = {}
-Ppwm.__index = Ppwm
+PPWM = {}
+PPWM.__index = PPWM
 
-function Ppwm:create(pin, clock)
+function PPWM:create(pin, clock)
   local this = {
   -- This is the wdth of the pulse based on the hardware. This can be adjusted to determine the
   -- output power. e.g maximum duty cycle would be classed as "on" while 0 could be classed as
@@ -34,7 +34,7 @@ function Ppwm:create(pin, clock)
     this.clock_cycle = clock
   end
 
-  setmetatable(this, Ppwm)
+  setmetatable(this, PPWM)
   return this
 end
 
@@ -45,7 +45,7 @@ end
 -- clock      {number}:  The clock cycle of the specified pin.
 -- duty_cycle {number}:  The duty cycle of the specified pin, how much power.
 -- start      {boolean}: If configuration process should also start processing pwm data.
-function Ppwm:configure(duty)
+function PPWM:configure(duty)
     self.PWM.setup(self.executing_pin, self.clock_cycle, self.duty_cycle_limit)
     self:update_duty(duty)
     self.running = true
@@ -53,7 +53,7 @@ end
 
 -- Stops the current proessing of the PWM data, marks internally that the PWM is not running and
 -- calls into the module to stop the PWM.
-function Ppwm:stop()
+function PPWM:stop()
   if self.running then
     self.running = false
     self.PWM.stop()
@@ -63,7 +63,7 @@ end
 -- Completely disconnects and quits the PWM mode for the current executing pin. Ensures to
 -- stop/pause the processing of the data in pwm first before quiting the pwm mode for the current
 -- pin.
-function Ppwm:close()
+function PPWM:close()
   if self.running then
     self:stop()
   end
@@ -76,7 +76,7 @@ end
 -- processing again.
 --
 -- pin {number}: The chip pin that is being setup for pwm processing.
-function Ppwm:update_executing_pin(pin)
+function PPWM:update_executing_pin(pin)
   if self.running then
     self:close()
   end
@@ -90,7 +90,7 @@ end
 -- problems but this will ensure the duty will not.
 --
 -- duty {number}: The duty cycle of the specified pin, how much power.
-function Ppwm:update_duty(duty)
+function PPWM:update_duty(duty)
   if duty > self.duty_cycle_limit then
     duty = self.duty_cycle_limit
   end
@@ -105,20 +105,20 @@ end
 -- Increases the duty by the specified amount.
 --
 -- amount {number}: The amount to increase the duty.
-function Ppwm:increase_duty(amount)
+function PPWM:increase_duty(amount)
   self.updateDuty(self:get_duty() + amount)
 end
 
 -- Decreases the duty by the specified amount.
 --
 -- amount {number}: The amount to decrease the duty.
-function Ppwm:decrease_duty(amount)
+function PPWM:decrease_duty(amount)
   self:updateDuty(self:get_duty() - amount)
 end
 
 -- returns the current dity on the current pin.
-function Ppwm:get_duty()
+function PPWM:get_duty()
   return self.PWM.getduty(self.executing_pin)
 end
 
-return Ppwm
+return PPWM

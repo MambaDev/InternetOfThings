@@ -1,5 +1,5 @@
 
-local M  = {
+local TIME  = {
   UK_TIME_SERVER  = "uk.pool.ntp.org";
 }
 
@@ -13,7 +13,7 @@ local M  = {
 --
 -- Requires internet connection.
 local function clock_syncronization(timer_server, sync_callback, fail_sync_callback)
-  local server = timer_server or M.UK_TIME_SERVER;
+  local server = timer_server or TIME.UK_TIME_SERVER;
   sntp.sync(server, sync_callback, fail_sync_callback)
 end
 
@@ -26,8 +26,8 @@ local function setup_cron_job(raw_input_string, callback_function)
   cron.schedule(raw_input_string, callback_function);
 end
 
-M.clock_syncronization = clock_syncronization;
-M.setup_cron_job = setup_cron_job;
+TIME.clock_syncronization = clock_syncronization;
+TIME.setup_cron_job = setup_cron_job;
 
-return M;
+return TIME;
 

@@ -1,5 +1,5 @@
 
-local M  = {}
+local UTILS  = {}
 
 -- # trilateration formulas to return the (x,y) intersection point of three circles
 local function trilateration(x1,y1,r1,x2,y2,r2,x3,y3,r3)
@@ -88,16 +88,16 @@ local function received_signal_strength_indication(n, d, R)
   return -(10 * n * math.log(d, 10) + R)
 end
 
-M.starts_with = starts_with
-M.trilateration = trilateration
+UTILS.starts_with = starts_with
+UTILS.trilateration = trilateration
 
-M.time_of_arrival_wave_velocity = time_of_arrival_wave_velocity
-M.time_of_arrival_return_time = time_of_arrival_return_time
-M.time_difference_of_arrival = time_difference_of_arrival
+UTILS.time_of_arrival_wave_velocity = time_of_arrival_wave_velocity
+UTILS.time_of_arrival_return_time = time_of_arrival_return_time
+UTILS.time_difference_of_arrival = time_difference_of_arrival
 
-M.received_signal_strength_indication = received_signal_strength_indication
+UTILS.received_signal_strength_indication = received_signal_strength_indication
 
-M.test = test
-M.clock_syncronization = clock_syncronization;
+UTILS.test = test
+UTILS.clock_syncronization = clock_syncronization;
 
-return M
+return UTILS

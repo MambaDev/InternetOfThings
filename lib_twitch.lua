@@ -1,6 +1,6 @@
 local utils = require("utils")
 
-local Twitch = {
+local TWITCH = {
   ws = nil,
   on_private_message = nil,
   channel = nil
@@ -43,42 +43,42 @@ end
 local function on_connection(ws)
   print ('twitch ws connected')
 
-  Twitch.ws:send("NICK justinfan129038740928374")
+  TWITCH.ws:send("NICK justinfan129038740928374")
 end
 
 local function on_close(_, status)
   print('connection closed', status)
-  Twitch.ws = nil -- required to Lua gc the websocket client
+  TWITCH.ws = nil -- required to Lua gc the websocket client
 end
 
 local function on_recieve(_, message, opCode)
   for line in message:gmatch("[^\r\n]+") do
     if utils.starts_with(line, "PING") then
-      return Twitch.ws:send("PONG :tmi.twitch.tv")
+      return TWITCH.ws:send("PONG :tmi.twitch.tv")
     end
 
     local prefix, cmd, channel, params = parse_message(line)
 
-    if cmd == "001" and Twitch.channel ~= nil then
-      return Twitch.ws:send("JOIN #" .. Twitch.channel)
+    if cmd == "001" and TWITCH.channel ~= nil then
+      return TWITCH.ws:send("JOIN #" .. TWITCH.channel)
     end
 
-    if cmd == "PRIVMSG" and Twitch.on_private_message ~= nil then
-      Twitch.on_private_message(channel, params)
+    if cmd == "PRIVMSG" and TWITCH.on_private_message ~= nil then
+      TWITCH.on_private_message(channel, params)
     end
   end
 end
 
 local function connect()
-  Twitch.ws = websocket.createClient()
+  TWITCH.ws = websocket.createClient()
 
-  Twitch.ws:on("connection", on_connection)
-  Twitch.ws:on("receive", on_recieve)
-  Twitch.ws:on("close", on_close)
+  TWITCH.ws:on("connection", on_connection)
+  TWITCH.ws:on("receive", on_recieve)
+  TWITCH.ws:on("close", on_close)
 
-  Twitch.ws:connect("ws://irc-ws.chat.twitch.tv:80")
+  TWITCH.ws:connect("ws://irc-ws.chat.twitch.tv:80")
 end
 
-Twitch.connect = connect
+TWITCH.connect = connect
 
-return Twitch
+return TWITCH

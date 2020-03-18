@@ -1,23 +1,26 @@
-local internet = require("lib_internet");
-local time = require("lib_time");
+local lights = require("lib_lights")
+local buttons = require("lib_button")
 
--- lib used
--- rtctime, sntp, cron, http, sjson
+local light = lights:create(1, lights.mode.off);
 
-local function on_internet_connected()
-  print("Internet connected");
-  print("Syncronizating with internet clock")
-  time.clock_syncronization()
+local function on_press()
+  light:change_mode(light.mode.on)
+  print('pressed')
 end
 
-local function on_internet_disconnected()
-  print("Internet disconnected")
+local function on_long_press()
+  print('long_pressed')
+end
+
+local function on_released()
+  light:change_mode(light.mode.off)
+  print('released')
 end
 
 local function main()
-  internet.configure_station("The Promise Lan", "DangerZone2018", nil)
-  internet.connect_station(on_internet_connected, nil, on_internet_disconnected)
-end
+  print('setting up button');
+  local button = buttons:create(2, on_press, on_long_press, on_released)
 
+end
 
 main()

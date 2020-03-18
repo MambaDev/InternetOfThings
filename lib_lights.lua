@@ -1,26 +1,45 @@
-local M = {}
+local LIGHTS = { mode = { on= gpio.HIGH, off = gpio.LOW }; }
+LIGHTS.__index  = LIGHTS
 
-local LIGHTS = {
-  -- Large LED on chip, called by pin D4.
-  LARGE = 4;
-  -- Small LED on chip, called by pin D0.
-  SMALL = 0;
-}
+-- Creates a new instance of a single light control
+--
+-- pin:           The exuection pin in switch the operations will take place.
+-- starting_mode: The starting mode in which the pin will be in, on/off.
+function LIGHTS:create(pin, starting_mode)
+  local this = {
+    state = starting_mode or LIGHTS.mode.on;
+    executing_pin = pin or 4;
+  }
 
--- ChangeLightState updates a given light state based on the status. The light is the led which is
--- being set. use .LARGE or .SMALL. The status is a boolean expression for on or off. (true for on.)
-local function changeLightState(light, status)
-  local mode = gpio.HIGH
+  setmetatable(this, LIGHTS)
 
-  if status then mode = gpio.LOW end
+  gpio.mode(this.executing_pin, gpio.OUTPUT);
+  gpio.write(this.executing_pin, this.state);
 
-  gpio.mode(light, gpio.OUTPUT)
-  gpio.write(light, mode)
+  return this;
 end
 
-M.changeLightState = changeLightState
+-- Triggers the light to switch to the alternative light mode, e.g switching
+-- between off and on and on and off based on the current state.
+function LIGHTS:switch_mode()
+ if self.state == self.mode.on then
+    self.state = self.mode.off;
+ else
+  self.state = self.mode.on;
+ end
 
-M.LARGE = LIGHTS.LARGE
-M.SMALL = LIGHTS.SMALL
+ gpio.write(self.executing_pin, self.state);
+end
 
-return M
+-- Change the current light state to thep provided state and if and only if
+-- the provided state is not the already assigned mode.
+--
+-- state: The state being set, on or off.
+function LIGHTS:change_mode(state)
+  if state ~= nil and state ~= self.state then
+    self.state = state;
+    gpio.write(self.executing_pin, self.state)
+  end
+end
+
+return LIGHTS

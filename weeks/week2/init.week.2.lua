@@ -28,13 +28,13 @@ local function led_breathing_effect(pwms, shift)
   end
 
 local function main()
-  local p1 = ppwm:create(4)
+  local p1 = ppwm:create(1)
   p1:configure(1023)
 
-  local p2 = ppwm:create(3)
+  local p2 = ppwm:create(2)
   p2:configure(1023)
 
-  local p3 = ppwm:create(2)
+  local p3 = ppwm:create(3)
   p3:configure(1023)
 
   local pwm_timer = tmr.create()

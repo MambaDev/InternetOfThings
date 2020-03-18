@@ -1,29 +1,50 @@
-local lights = require("lib_lights")
-local buttons = require("lib_button")
 
-local light = lights:create(1, lights.mode.off);
-local light2 = lights:create(3, lights.mode.off);
+local ppwm = require("lib_ppwm")
 
-local function on_press()
-  light:change_mode(light.mode.on)
-  print('pressed')
+local red = ppwm:create(1, 1000, 0)
+
+local function on_action()
+  red:update_duty(1023)
 end
 
-local function on_long_press()
-  light2:change_mode(light2.mode.on);
-  print('long_pressed')
+local function off_action()
+  red:update_duty(0)
 end
 
-local function on_released()
-  light:change_mode(light.mode.off)
-  light2:change_mode(light2.mode.off);
-  print('released')
+
+local function process_interval(intervals, actions)
+  local position = 1;
+
+  if intervals[position] == 1 or intervals[position] == 0 then
+    actions[position]()
+    return
+  end
+
+  actions[position]()
+  print(intervals[position])
+
+  local interval_timer =  tmr.create();
+  interval_timer:register(intervals[position], tmr.ALARM_AUTO, function ()
+
+    position = position + 1
+    if position > table.getn(intervals) then
+      position  = 1
+    end
+
+    actions[position]()
+    interval_timer:interval(intervals[position])
+    print(intervals[position])
+  end)
+
+  interval_timer:start();
 end
 
 local function main()
-  print('setting up button');
-  local button = buttons:create(2, on_press, on_long_press, on_released)
-
+  local intervals = {1000, 500, 2000, 200}
+  local actions = {on_action, off_action, on_action, off_action}
+  process_interval(intervals, actions)
 end
 
-main()
+local start_timer = tmr.create()
+start_timer:register(1000, tmr.ALARM_SINGLE,  main)
+start_timer:start()

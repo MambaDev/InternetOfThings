@@ -1,7 +1,7 @@
 PPWM = {}
 PPWM.__index = PPWM
 
-function PPWM:create(pin, clock)
+function PPWM:create(pin, clock, current_duty)
   local this = {
   -- This is the wdth of the pulse based on the hardware. This can be adjusted to determine the
   -- output power. e.g maximum duty cycle would be classed as "on" while 0 could be classed as
@@ -14,41 +14,24 @@ function PPWM:create(pin, clock)
   duty_cycle_limit = 1023;
 
   -- The frequency the PWM is executing within.
-  clock_cycle = 1000;
+  clock_cycle = clock or 1000;
 
   -- The IO pin that will be taking the PWM input.
-  executing_pin = -1;
+  executing_pin = pin or -1;
 
   -- The internal PWM module.
   PWM = pwm;
 
   -- If we are currently running or not.
-  running = false;
+  running = true;
   }
 
-  if pin ~= nil then
-    this.executing_pin = pin
-  end
-
-  if clock ~= nil then
-    this.clock_cycle = clock
-  end
-
   setmetatable(this, PPWM)
-  return this
-end
 
--- configure sets up the pwm on a specified pin with a clock and duty cycle. If start is specified
--- then the pwm will be setup and the duty will  be found to the pin.
---
--- pin        {number}:  The chip pin that is being setup for pwm processing.
--- clock      {number}:  The clock cycle of the specified pin.
--- duty_cycle {number}:  The duty cycle of the specified pin, how much power.
--- start      {boolean}: If configuration process should also start processing pwm data.
-function PPWM:configure(duty)
-    self.PWM.setup(self.executing_pin, self.clock_cycle, self.duty_cycle_limit)
-    self:update_duty(duty)
-    self.running = true
+  pwm.setup(this.executing_pin, this.clock_cycle, this.duty_cycle_limit)
+  pwm.setduty(this.executing_pin, current_duty)
+
+  return this
 end
 
 -- Stops the current proessing of the PWM data, marks internally that the PWM is not running and
@@ -56,7 +39,7 @@ end
 function PPWM:stop()
   if self.running then
     self.running = false
-    self.PWM.stop()
+    pwm.stop()
   end
 end
 
@@ -68,7 +51,7 @@ function PPWM:close()
     self:stop()
   end
 
-  self.PWM.close()
+  pwm.close()
 end
 
 -- updateExecutingPin takes in a new pin that will processing the PWM and if currently executing,
@@ -82,7 +65,8 @@ function PPWM:update_executing_pin(pin)
   end
 
   self.executing_pin = pin
-  self:configure()
+  pwm.setup(self.executing_pin, self.clock_cycle, self.duty_cycle_limit)
+  pwm.setduty(self.executing_pin, self.duty_cycle_limit)
 end
 
 -- Updates the duty for the current pin with the specified amount. Including the guarding of the
@@ -99,7 +83,7 @@ function PPWM:update_duty(duty)
     duty = 0
   end
 
-  self.PWM.setduty(self.executing_pin, duty)
+  pwm.setduty(self.executing_pin, duty)
 end
 
 -- Increases the duty by the specified amount.
@@ -118,7 +102,7 @@ end
 
 -- returns the current dity on the current pin.
 function PPWM:get_duty()
-  return self.PWM.getduty(self.executing_pin)
+  return pwm.getduty(self.executing_pin)
 end
 
 return PPWM

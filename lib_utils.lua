@@ -88,7 +88,6 @@ local function received_signal_strength_indication(n, d, R)
   return -(10 * n * math.log(d, 10) + R)
 end
 
-UTILS.starts_with = starts_with
 UTILS.trilateration = trilateration
 
 UTILS.time_of_arrival_wave_velocity = time_of_arrival_wave_velocity
@@ -96,8 +95,5 @@ UTILS.time_of_arrival_return_time = time_of_arrival_return_time
 UTILS.time_difference_of_arrival = time_difference_of_arrival
 
 UTILS.received_signal_strength_indication = received_signal_strength_indication
-
-UTILS.test = test
-UTILS.clock_syncronization = clock_syncronization;
 
 return UTILS

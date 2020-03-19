@@ -24,6 +24,10 @@ function PPWM:create(pin, clock, current_duty)
 
   -- If we are currently running or not.
   running = true;
+
+  -- transition timer used to ensure we have a single timer and dont get stuck
+  -- in a loop.
+  transition_timer = nil;
   }
 
   setmetatable(this, PPWM)
@@ -86,18 +90,61 @@ function PPWM:update_duty(duty)
   pwm.setduty(self.executing_pin, duty)
 end
 
+-- Cleans up the transition timer by stopping it and unregistering
+-- the timer (finally setting to nil) if its currently not running
+-- and not nil.
+function PPWM:clean_up_transition_timer()
+  if self.transition_timer == nil then return end
+
+  self.transition_timer:stop()
+  self.transition_timer:unregister()
+  self.transition_timer = nil
+end
+
+-- Transition between two different duty modes, based on a given interval speed.
+-- If the duty is lower than the current duty, it will decrease otherwise increase
+-- to the specified duty.
+--
+-- remarks: if the transition is called again during a transition, the current
+-- transition is cancelled and starts again to the new duty at the new interval.
+--
+-- duty: The target duty of the pwm pin.
+-- speed: the millisecond transition tick rate to hit said duty (in terms of 50 duty spaces)
+function PPWM:transition_to_duty(duty, speed)
+  local direction = duty > self:get_duty()
+
+  if self.transition_timer ~= nil then
+      self:clean_up_transition_timer()
+  end
+
+  self.transition_timer = tmr.create()
+
+  self.transition_timer:register(speed, tmr.ALARM_AUTO, function ()
+    if (not direction and self:get_duty() <= duty)
+      or (direction and self:get_duty() >= duty) then
+      self:clean_up_transition_timer()
+      self:update_duty(duty)
+    end
+
+    if direction then self:increase_duty(50)
+    else self:decrease_duty(50) end
+  end)
+
+  self.transition_timer:start()
+end
+
 -- Increases the duty by the specified amount.
 --
 -- amount {number}: The amount to increase the duty.
 function PPWM:increase_duty(amount)
-  self.updateDuty(self:get_duty() + amount)
+  self:update_duty(self:get_duty() + amount)
 end
 
 -- Decreases the duty by the specified amount.
 --
 -- amount {number}: The amount to decrease the duty.
 function PPWM:decrease_duty(amount)
-  self:updateDuty(self:get_duty() - amount)
+  self:update_duty(self:get_duty() - amount)
 end
 
 -- returns the current dity on the current pin.

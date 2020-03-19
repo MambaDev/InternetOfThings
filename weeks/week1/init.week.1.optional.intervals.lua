@@ -4,13 +4,11 @@ local ppwm = require("lib_ppwm")
 local red = ppwm:create(1, 1000, 0)
 
 local function on_action()
-  -- red:update_duty(1023)
-  red:transition_to_duty(1000, 10)
+  red:update_duty(1023)
 end
 
 local function off_action()
-  -- red:update_duty(0)
-  red:transition_to_duty(0, 10)
+  red:update_duty(0)
 end
 
 

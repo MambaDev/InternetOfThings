@@ -11,6 +11,7 @@
         "sntp",
         "cron",
         "http",
-        "sjson"
+        "sjson",
+        "unpack"
     ]
 }

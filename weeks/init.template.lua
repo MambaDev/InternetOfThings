@@ -1,24 +1,32 @@
-local internet = require("lib_internet");
-local time = require("lib_time");
+-- Core implemation requirements (imports).
+local internet = require("lib_internet")
+local logger = require("lib_logger")
+local time = require("lib_time")
 
--- lib used
--- rtctime, sntp, cron, http, sjson
+-- Unit requirements (imports).
+
+-- The function called when everything is setup and ready to go within the nodeMCU.
+-- This includes the internet connection, clock syncronization and logger logger
+-- setup.
+local function on_start()
+  logger.info("Application starting - basic application")
+end
+
+local function on_failed()
+  logger.info("Application failed to start")
+end
 
 local function on_internet_connected()
-  print("Internet connected");
-  print("Syncronizating with internet clock")
-  time.clock_syncronization()
+  time.clock_syncronization(time.UK_TIME_SERVER, on_start, on_failed);
 end
 
-local function on_internet_disconnected()
-  print("Internet disconnected")
-end
+-- 1 second before we start so we have a safe cutoff point.
+local start_timer = tmr.create()
 
-local function main()
+start_timer:register(1000, tmr.ALARM_SINGLE,  function ()
   internet.configure_station("The Promise Lan", "DangerZone2018", nil)
-  internet.connect_station(on_internet_connected, nil, on_internet_disconnected)
-end
+  internet.connect_station(nil, on_internet_connected, on_failed)
+end)
 
-
-main()
+start_timer:start()
 

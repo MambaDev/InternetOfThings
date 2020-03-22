@@ -1,46 +1,35 @@
+-- Core implemation requirements.
+local internet = require("lib_internet")
+local time = require("lib_time")
 
-local ppwm = require("lib_ppwm")
+-- Unit requirements.
+local lights = require("lib_lights")
+local buttons = require("lib_button")
 
-local red = ppwm:create(1, 1000, 0)
+local light = lights:create(1, lights.mode.off);
 
-local function on_action()
-  -- red:update_duty(1023)
-  red:transition_to_duty(1000, 10)
+local function on_press() end
+local function on_long_press() end
+local function on_released() end
+
+-- The function called when everything is setup and ready to go within the nodeMCU.
+-- This includes the internet connection, clock syncronization and logger logger
+-- setup.
+local function on_start() 
+  buttons:create(2, on_press, on_long_press, on_released)
 end
 
-local function off_action()
-  -- red:update_duty(0)
-  red:transition_to_duty(0, 10)
+local function on_internet_connected()
+  time.clock_syncronization()
+  on_start()
 end
 
-
-local function process_interval(intervals, actions, position)
-  if intervals[position] == 1 or intervals[position] == 0 then
-    actions[position]()
-    return
-  end
-
-  local interval_timer =  tmr.create();
-  actions[position]()
-
-  interval_timer:register(intervals[position], tmr.ALARM_AUTO, function ()
-    position = position + 1
-
-    if position > table.getn(intervals) then position  = 1 end
-
-    interval_timer:interval(intervals[position])
-    actions[position]()
-  end)
-
-  interval_timer:start();
-end
-
-local function main()
-  local intervals = {1000, 500, 2000, 200}
-  local actions = {on_action, off_action, on_action, off_action}
-  process_interval(intervals, actions, 1)
-end
-
+-- 1 second before we start so we have a safe cutoff point.
 local start_timer = tmr.create()
-start_timer:register(1000, tmr.ALARM_SINGLE,  main)
+
+start_timer:register(1000, tmr.ALARM_SINGLE,  function ()
+  internet.configure_station("The Promise Lan", "DangerZone2018", nil)
+  internet.connect_station(on_internet_connected)
+end)
+
 start_timer:start()

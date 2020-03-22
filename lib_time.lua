@@ -17,6 +17,15 @@ local function clock_syncronization(timer_server, sync_callback, fail_sync_callb
   sntp.sync(server, sync_callback, fail_sync_callback)
 end
 
+-- Gets the current time stamp based on the rtctime and clock syncronization.
+local function get_time_stamp()
+  local seconds, microseconds, rate = rtctime.get()
+  local c_time = rtctime.epoch2cal(seconds, microseconds, rate);
+
+  return string.format("%04d/%02d/%02d %02d:%02d:%02d", c_time["year"], 
+    c_time["mon"], c_time["day"], c_time["hour"], c_time["min"], c_time["sec"])
+end
+
 -- Setups a cronjob with the raw string provided. Reference related material for the structure on
 -- how to use a cron job.
 --
@@ -28,6 +37,7 @@ end
 
 TIME.clock_syncronization = clock_syncronization;
 TIME.setup_cron_job = setup_cron_job;
+TIME.get_time_stamp = get_time_stamp;
 
 return TIME;
 

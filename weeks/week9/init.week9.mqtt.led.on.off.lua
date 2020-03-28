@@ -8,17 +8,18 @@ logger.debugging = true;
 
 -- Unit requirements (imports).
 local adamqtt = require("lib_ada_mqtt")
-local ppwm = require("lib_ppwm");
+local lights = require("lib_lights");
+-- local ppwm = require("lib_ppwm");
 
 ADAFRUIT_IO_USERNAME = "mambadev"
 ADAFRUIT_IO_KEY = "aio_KXFc21Ti8DdEVpWrpFEkcVZlgPjt"
 
-local light = ppwm:create(3, 1024, 0);
+local light = lights:create(3, lights.mode.on);
 
 local function on_mqtt_connected(client)
-  client:subscribe("mambadev/feeds/led-slider", nil, function (topic, data)
-    client:publish("mambadev/feeds/led-slider-text", data);
-    light:update_duty(tonumber(data));
+  client:subscribe("mambadev/feeds/led", nil, function (topic, data)
+    if data == "ON" then light:change_mode(lights.mode.on); end;
+    if data == "OFF" then light:change_mode(lights.mode.off); end;
   end)
 end
 

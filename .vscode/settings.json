@@ -1,17 +1,19 @@
 {
-    "Lua.diagnostics.globals": [
-        "gpio",
-        "wifi",
-        "websocket",
-        "pwm",
-        "tmr",
-        "dht",
-        "net",
-        "rtctime",
-        "sntp",
-        "cron",
-        "http",
-        "sjson",
-        "unpack"
-    ]
+  "Lua.diagnostics.globals": [
+    "gpio",
+    "wifi",
+    "websocket",
+    "pwm",
+    "tmr",
+    "dht",
+    "net",
+    "rtctime",
+    "sntp",
+    "cron",
+    "http",
+    "sjson",
+    "unpack",
+    "mqtt",
+    "mqtt"
+  ]
 }

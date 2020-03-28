@@ -17,7 +17,6 @@ local light = ppwm:create(3, 1024, 0);
 
 local function on_mqtt_connected(client)
   client:subscribe("mambadev/feeds/led-slider", nil, function (topic, data)
-    client:publish("mambadev/feeds/led-slider-text", data);
     light:update_duty(tonumber(data));
   end)
 end
@@ -51,3 +50,4 @@ start_timer:register(1000, tmr.ALARM_SINGLE,  function ()
 end)
 
 start_timer:start()
+

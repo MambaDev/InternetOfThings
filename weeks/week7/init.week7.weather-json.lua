@@ -7,7 +7,7 @@ local weather = require("lib_weather");
 
 local function on_internet_connected()
   print("internet connected - gathering weather for Portsmouth, UK")
-  time.clock_syncronization()
+  time.clock_synchronization()
 
   weather.get_weather_by_city_and_country("portsmouth", "uk", function (data)
       for k,v in pairs(data.main) do print(k,v) end

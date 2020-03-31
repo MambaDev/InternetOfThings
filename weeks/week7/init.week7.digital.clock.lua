@@ -31,13 +31,11 @@ local function on_digital_alarm_clock_trigger()
         print(string.format("      Windy: \t%d    \tMph", data.wind.speed))
         print("###### WEATHER - Portsmouth, UK #######");
     end)
-
-
 end
 
 local function on_internet_connected()
   print("Internet connected - synchronizing internal clock with: " .. time.UK_TIME_SERVER)
-  time.clock_syncronization()
+  time.clock_synchronization()
 
   print("Setting up digital alarm clock corn job: */5 * * * * (every 5 minutes)")
   time.setup_cron_job("*/5 * * * *", on_digital_alarm_clock_trigger)

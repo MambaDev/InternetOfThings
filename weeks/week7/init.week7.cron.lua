@@ -22,7 +22,7 @@ end
 
 local function on_internet_connected()
   print("internet connected - attempting synctronization")
-  time.clock_syncronization()
+  time.clock_synchronization()
 
   setup_cron_job("* * * * *", function ()
     stampTime()

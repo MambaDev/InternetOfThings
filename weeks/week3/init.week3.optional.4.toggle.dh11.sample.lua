@@ -48,7 +48,7 @@ local function on_released() end
 
 local function on_internet_connected()
   print("Internet connected - synchronizing internal clock with: " .. time.UK_TIME_SERVER)
-  time.clock_syncronization()
+  time.clock_synchronization()
 
   buttons:create(2, on_press, on_long_press, on_released, 20)
  end

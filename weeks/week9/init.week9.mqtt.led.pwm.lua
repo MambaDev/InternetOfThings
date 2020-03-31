@@ -38,7 +38,7 @@ local function on_failed(reason)
 end
 
 local function on_internet_connected()
-  time.clock_syncronization(time.UK_TIME_SERVER, on_start, on_failed);
+  time.clock_synchronization(time.UK_TIME_SERVER, on_start, on_failed);
 end
 
 -- 1 second before we start so we have a safe cutoff point.

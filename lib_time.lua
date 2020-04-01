@@ -54,5 +54,4 @@ TIME.clear_cron_job = clear_cron_job;
 TIME.update_cron_job = update_cron_job;
 TIME.get_time_stamp = get_time_stamp;
 
-return TIME;
-
+return TIME

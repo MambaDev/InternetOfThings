@@ -16,6 +16,8 @@
         "mqtt",
         "mqtt",
         "adc",
-        "to_string"
+        "to_string",
+        "file",
+        "node"
     ]
 }

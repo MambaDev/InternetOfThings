@@ -3,18 +3,18 @@ LIGHTS.__index  = LIGHTS
 
 -- Creates a new instance of a single light control
 --
--- pin:           The exuection pin in switch the operations will take place.
+-- pin:           The execution pin in switch the operations will take place.
 -- starting_mode: The starting mode in which the pin will be in, on/off.
 function LIGHTS:create(pin, starting_mode)
   local this = {
-    state = starting_mode or LIGHTS.mode.on;
+    state = starting_mode or LIGHTS.mode.off;
     executing_pin = pin or 4;
   }
 
-  setmetatable(this, LIGHTS)
-
   gpio.mode(this.executing_pin, gpio.OUTPUT);
   gpio.write(this.executing_pin, this.state);
+
+  setmetatable(this, LIGHTS)
 
   return this;
 end
@@ -31,7 +31,7 @@ function LIGHTS:switch_mode()
  gpio.write(self.executing_pin, self.state);
 end
 
--- Change the current light state to thep provided state and if and only if
+-- Change the current light state to the provided state and if and only if
 -- the provided state is not the already assigned mode.
 --
 -- state: The state being set, on or off.

@@ -2,14 +2,19 @@ local time = require("lib_time")
 
 local M = {
   debugging = false;
+  time = false;
 }
 
 -- prints a message to the console with a time stamp and a given info message stamp.
 --
 -- message (string): The message being printed to the page.
 local function info(message)
-  local time_stamp = time.get_time_stamp()
-  print(string.format('%s - INFO: %s', time_stamp, message));
+  if M.time then
+    local time_stamp = time.get_time_stamp()
+    print(string.format('%s - INFO: %s', time_stamp, message));
+  else
+    print(string.format('INFO: %s', message));
+  end
 end
 
 -- prints a message with arguments to the console with a time stamp and a given info message stamp.
@@ -27,8 +32,12 @@ end
 local function debug(message)
   if not M.debugging then return end
 
-  local time_stamp = time.get_time_stamp()
-  print(string.format('%s - DEBUG: %s', time_stamp, message));
+  if M.time then
+    local time_stamp = time.get_time_stamp()
+    print(string.format('%s - DEBUG: %s', time_stamp, message));
+  else
+    print(string.format('%DEBUG: %s', message));
+  end
 end
 
 -- prints a message to the console with a time stamp and a given debug message stamp.
@@ -45,4 +54,4 @@ M.infof = infof;
 M.debug = debug;
 M.debugf = debugf;
 
-return M;
+return M

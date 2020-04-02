@@ -90,7 +90,7 @@ function PPWM:update_duty(duty)
   pwm.setduty(self.executing_pin, duty)
 end
 
--- Cleans up the transition timer by stopping it and unregistering
+-- Cleans up the transition timer by stopping it and un-registering
 -- the timer (finally setting to nil) if its currently not running
 -- and not nil.
 function PPWM:clean_up_transition_timer()
@@ -109,9 +109,10 @@ end
 -- transition is cancelled and starts again to the new duty at the new interval.
 --
 -- duty: The target duty of the pwm pin.
--- speed: the millisecond transition tick rate to hit said duty (in terms of 50 duty spaces)
-function PPWM:transition_to_duty(duty, speed)
+-- input_speed: the millisecond transition tick rate to hit said duty (in terms of 50 duty spaces)
+function PPWM:transition_to_duty(duty, input_speed)
   local direction = duty > self:get_duty()
+  local speed = input_speed or 50
 
   if self.transition_timer ~= nil then
       self:clean_up_transition_timer()

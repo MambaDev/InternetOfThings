@@ -1,15 +1,15 @@
 local internet = require("lib_internet")
 
 -- unit requirements (imports).
-local lights = require("lib_lights")
+local pwms = require("lib_ppwm");
 local buttons = require("lib_button")
 
 print("module load heap: " .. node.heap())
 
-local light_yellow =  lights:create(5, lights.mode.off)
-local light_green = lights:create(6, lights.mode.off)
-local light_red = lights:create(7, lights.mode.off)
-local light_white = lights:create(8, lights.mode.off)
+local light_yellow = pwms:create(5, nil, 0)
+local light_green = pwms:create(6, nil, 0)
+local light_red = pwms:create(7, nil, 0)
+local light_white = pwms:create(8, nil, 0)
 
 
 -- the function called when everything is setup and ready to go within the NodeMCU.
@@ -18,17 +18,17 @@ local light_white = lights:create(8, lights.mode.off)
 local function on_start()
   print("ip: " .. internet.get_station_ip())
 
-  buttons:create(1, function () light_yellow:change_mode(lights.mode.on); end, nil,
-    function () light_yellow:change_mode(lights.mode.off); end)
+  buttons:create(1, function () light_yellow:transition_to_duty(1024); end, nil,
+    function () light_yellow:transition_to_duty(0); end)
 
-  buttons:create(2, function () light_green:change_mode(lights.mode.on); end, nil,
-    function () light_green:change_mode(lights.mode.off); end)
+  buttons:create(2, function () light_green:transition_to_duty(1024); end, nil,
+    function () light_green:transition_to_duty(0); end)
  
-  buttons:create(3, function () light_red:change_mode(lights.mode.on); end, nil,
-    function () light_red:change_mode(lights.mode.off); end)
+  buttons:create(3, function () light_red:transition_to_duty(1024); end, nil,
+    function () light_red:transition_to_duty(0); end)
 
-  buttons:create(4, function () light_white:change_mode(lights.mode.on); end, nil,
-    function () light_white:change_mode(lights.mode.off); end)
+  buttons:create(4, function () light_white:transition_to_duty(1024); end, nil,
+    function () light_white:transition_to_duty(0); end)
  end
 
 -- log the reason to why the application failed to connect to the internet, or

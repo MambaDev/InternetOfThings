@@ -18,7 +18,7 @@ local state = {
   -- The table of all the registered buttons of the application.
   buttons = {};
 
-  -- The possible stages of which the keycode could be in.
+  -- The possible stages of which the keypad could be in.
   stages = {
     awaiting_selection = "awaiting_selection";
     awaiting_pin = "awaiting_pin";
@@ -26,7 +26,7 @@ local state = {
     locked = "locked";
   };
 
-  -- The current stage the keycode is in, this will be used to ensure the
+  -- The current stage the keypad is in, this will be used to ensure the
   -- correct steps are being executed.
   stage = "awaiting_selection";
 
@@ -65,8 +65,36 @@ local state = {
 -- result  (string): The result of the action being audited.
 -- message (string): The supporting message of the audit.
 local function audit_action(area, result, message)
-  if table.getn(state.audit.history) >= state.audit.limit then table.remove(1, state.audit.history) end
-  table.insert(state.audit.history, { area = area, result = result, message=message })
+  if table.getn(state.audit.history) >= state.audit.limit then table.remove(state.audit.history, 1) end
+  table.insert(state.audit.history, { area = area, result = result, message = message })
+  print(string.format("audit - area: %s, result: %s, message: %s", area, result, message))
+end
+
+-- Takes in a list of codes and the corresponding matching codes, if all codes
+-- match the matching values with the related index then return true otherwise
+-- return false.
+--
+-- codes    (table): The codes the user inputted.
+-- matching (table): The matching values that the codes should align too.
+local function did_enter_correct_code(codes, matching)
+      for i, match in ipairs(matching) do
+        if codes[i] == nil or codes[i] ~= match then
+          return false
+        end
+      end
+    return true
+end
+
+-- Updates the current stage to the new provided stage. While also auditing the
+-- given change.
+--
+-- new_stage (string): The new stage that will be put into.
+local function update_stage(new_stage)
+  audit_action(state.stage, state.audit.results.success, "Changing stage from " 
+    .. state.stage .. " to " .. new_stage);
+
+  state.stage = new_stage;
+
 end
 
 -- Transition all lights to a the given related state.
@@ -82,10 +110,38 @@ local function transition_all_lights(yellow, green, red, white)
   state.lights.white:transition_to_duty(white);
 end
 
+-- Trigger the buzzer within the specified duration and interval.
+--
+-- duration (number): How long (milliseconds) should the buzzer be executing for.
+-- interval (number): How many milliseconds between each buzz.
+local function trigger_buzzer(duration, interval)
+  local buzzer_timer = tmr.create();
+
+  local total = 0;
+
+  buzzer_timer:register(interval, tmr.ALARM_AUTO, function()
+    total = total + interval;
+    print("BUZZ");
+
+    if total >= duration - interval then
+      buzzer_timer:unregister();
+    end
+  end)
+
+  print("BUZZ");
+  buzzer_timer:start();
+end
+
 -- Transition the lights into a locked state, turning of all lights off and
 -- ensuring that the red light is on.
 local function transition_to_locked_state()
   transition_all_lights(0, 0, 400, 0);
+end
+
+-- Transition the lights into a unlocked state, turning of all lights off and
+-- ensuring that the green light is on.
+local function transition_to_unlocked_state()
+  transition_all_lights(0, 400, 0, 0);
 end
 
 -- Transition the lights into a sequence selection state, turning of all lights off and
@@ -100,14 +156,58 @@ local function transition_to_profile_selection_state()
   transition_all_lights(0, 0, 0, 400);
 end
 
+-- Processes through the steps to let the user know that the keypad is not
+-- unlocked, by transitioning the lights, triggering the buzzer and then
+-- resetting.
+local function process_not_unlock_complete()
+  local reset_keypad_timer = tmr.create()
+
+  transition_to_locked_state()
+  update_stage(state.stages.locked);
+
+  trigger_buzzer(4000, 1000);
+
+  local trigger_buzzer_Timer = tmr.create()
+  trigger_buzzer_Timer:register(100, 1, function () end)
+
+  reset_keypad_timer:register(1000 * 4, tmr.ALARM_SINGLE,  function ()
+    update_stage(state.stages.awaiting_selection);
+    transition_to_profile_selection_state();
+
+    state.selected_profile = nil;
+    state.pin_selection = nil;
+  end)
+
+  reset_keypad_timer:start()
+end
+
+-- Processes through the steps to let the user know that the keypad is unlocked,
+-- by transitioning the lights, triggering the buzzer and then resetting.
+local function process_unlock_complete()
+  local reset_keypad_timer = tmr.create()
+
+  update_stage(state.stages.unlocked);
+  transition_to_unlocked_state()
+
+  trigger_buzzer(4000, 2000);
+
+  reset_keypad_timer:register(1000 * 4, tmr.ALARM_SINGLE,  function ()
+    update_stage(state.stages.awaiting_selection);
+    transition_to_profile_selection_state();
+
+    state.selected_profile = nil;
+    state.pin_selection = nil;
+  end)
+
+  reset_keypad_timer:start()
+end
+
 -- Triggered when any given button is pressed, this should handle all cases in
 -- which the button could be in, locked, selection, keypad unlocking, sequence.
 local function on_press(button)
-  print("stage: " .. state.stage)
-
-  -- If the keycode is in a locked state, then no action can take place.
+  -- If the keypad is in a locked state, then no action can take place.
   if state.stage == state.stages.locked then
-      audit_action(state.stage, state.audit.results.failed, "keypad locked.");
+      audit_action(state.stage, state.audit.results.failed, "Keypad locked.");
       transition_to_locked_state();
     return
   end
@@ -116,9 +216,10 @@ local function on_press(button)
   -- selected profile, shift into profile selection stage. Any input after will
   -- be counted towards the lock sequence.
   if state.stage == state.stages.awaiting_selection then
-      audit_action(state.stage, state.audit.results.success, "profile selection.");
+      audit_action(state.stage, state.audit.results.success, "Profile selected: " .. button.id);
+      update_stage(state.stages.awaiting_pin);
+
       transition_to_sequence_selection_state();
-      state.stage = state.stages.awaiting_pin;
       state.selected_profile = button.id;
       state.pin_selection = {};
     return
@@ -127,13 +228,19 @@ local function on_press(button)
   -- If we are awaiting for pins then input another pin entry, if we have enough
   -- pins, validate and unlock if possible, otherwise reset.
   if state.stage == state.stages.awaiting_pin then
-      audit_action(state.stage, state.audit.results.success, "pin entry.");
+      audit_action(state.stage, state.audit.results.success, "Keypad pressed for profile.");
+
       table.insert(state.pin_selection, button.id);
 
     if table.getn(state.pin_selection) == table.getn(state.buttons) then
-      audit_action(state.stage, state.audit.results.success, "pin complete, validating.");
-      transition_all_lights(0, 400, 0, 0);
-    end
+      if did_enter_correct_code(state.pin_selection, state.profiles[state.selected_profile]) then
+        audit_action(state.stage, state.audit.results.success, "Keypad entry complete for profile.");
+        process_unlock_complete();
+      else
+        audit_action(state.stage, state.audit.results.failed, "Entered keypad did not match.");
+        process_not_unlock_complete();
+      end
+   end
     return
   end
 end
@@ -144,7 +251,9 @@ end
 local function on_released(button)
 end
 
-local function create_button(id, led, pin)
+-- Creates a new given button that will be used to handle button presses,
+-- pressed, long pressed and release state.
+local function create_button(id, pin)
   local button = {
     pressed_iteration_count = 0;
     long_pressed_iteration = 10;
@@ -164,16 +273,16 @@ local function create_button(id, led, pin)
   return button;
 end
 
-
+-- Setup and start the application.
 local function setup_and_register_buttons()
-  table.insert(state.buttons, create_button(1, 8, 1));
-  table.insert(state.buttons, create_button(2, 7, 2));
-  table.insert(state.buttons, create_button(3, 6, 3));
-  table.insert(state.buttons, create_button(4, 5, 4));
+  table.insert(state.buttons, create_button(1, 1));
+  table.insert(state.buttons, create_button(2, 2));
+  table.insert(state.buttons, create_button(3, 3));
+  table.insert(state.buttons, create_button(4, 4));
 
   -- Setup the default state, the user is awaiting to select a given profile
   -- that will be used to unlock the padlock.
-  state.stage = state.stages.awaiting_selection;
+  update_stage(state.stages.awaiting_selection);
   transition_to_profile_selection_state();
 
   local button_timer = tmr.create()

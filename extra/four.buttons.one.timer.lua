@@ -2,6 +2,23 @@ local function on_press() end
 local function on_long_press() end
 local function on_release() end
 
+local function create_button(pin, press, long_press, released)
+  local this = {
+    pin = pin,
+    GPIO = gpio,
+    on_press = press,
+    on_released = released,
+    on_long_press = long_press,
+    pressed = 0,
+    my_timer_pressed = tmr.create(),
+    pressed_iteration_count = 0,
+    long_pressed = 0,
+    long_pressed_iteration = 10
+  }
+
+  return this
+end
+
 local function four_buttons_one_timer()
   local buttons = {
     create_button(1, on_release, on_long_press, on_release),
@@ -16,7 +33,7 @@ local function four_buttons_one_timer()
         -- read the pin value (1 = pressed, 0 = not pressed)
         local pin_reading = gpio.read(button.executing_pin)
 
-        -- if the pin reading is currently presed and we are not marked as currently pressed, then mark
+        -- if the pin reading is currently pressed and we are not marked as currently pressed, then mark
         -- the button as pressed and trigger the pressed event if provided.
         if pin_reading == 1 and button.pressed == 0 then
           button.pressed = 1
@@ -27,7 +44,7 @@ local function four_buttons_one_timer()
         end
 
         -- if the button is stating that its not being pressed and the current state is that the button is
-        -- being presed. then reset press iteration, long press trigger and pressed trigger. Triggering
+        -- being pressed. then reset press iteration, long press trigger and pressed trigger. Triggering
         -- the on release event if its been provided or not.
         if pin_reading == 0 and button.pressed == 1 then
           button.pressed_iteration_count = 0

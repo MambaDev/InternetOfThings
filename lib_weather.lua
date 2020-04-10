@@ -39,7 +39,7 @@ local function get_weather_by_city_and_country(city, country, result_callback, e
   execute_and_decode(url, result_callback, error_callback);
  end
 
--- Gets the current wather for the city
+-- Gets the current weather for the city
 --
 -- city (string): The name of the city being gathered.
 -- result_callback (function | nil): The results callback with the parsed data.
@@ -51,7 +51,7 @@ local function get_weather_by_city(city, result_callback, error_callback)
   execute_and_decode(url, result_callback, error_callback);
 end
 
--- Gets the current wather for the city by id.
+-- Gets the current weather for the city by id.
 --
 -- city_id (number | string): The id of the city being gathered.
 -- result_callback (function | nil): The results callback with the parsed data.
@@ -63,10 +63,10 @@ local function get_weather_by_city_id(city_id, result_callback, error_callback)
   execute_and_decode(url, result_callback, error_callback);
 end
 
--- Gets the current wather by zipcode and country code.
+-- Gets the current weather by zip code and country code.
 --
--- zip_code (number | string): The zip-cide of the locations weather being gathered.
--- country (number | string): The country the zipcode is based in.
+-- zip_code (number | string): The zip-code of the locations weather being gathered.
+-- country (number | string): The country the zip code is based in.
 -- result_callback (function | nil): The results callback with the parsed data.
 -- error_callback (function | nil): The error callback for error cases with code and raw data.
 local function get_weather_by_zip_and_country(zip_code, country, result_callback, error_callback)
@@ -76,7 +76,7 @@ local function get_weather_by_zip_and_country(zip_code, country, result_callback
   execute_and_decode(url, result_callback, error_callback);
 end
 
--- Gets the current wather for the lat and lon.
+-- Gets the current weather for the lat and lon.
 --
 -- lat (number | string): The lat of the location weather to be gathered.
 -- lon (number | string): The lon of the location weather to be gathered.

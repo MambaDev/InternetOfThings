@@ -3,7 +3,7 @@ PPWM.__index = PPWM
 
 function PPWM:create(pin, clock, current_duty, duty_limit)
   local this = {
-  -- This is the wdth of the pulse based on the hardware. This can be adjusted to determine the
+  -- This is the width of the pulse based on the hardware. This can be adjusted to determine the
   -- output power. e.g maximum duty cycle would be classed as "on" while 0 could be classed as
   -- "off". Making sure to not provide too much power to the device and burning it out.
   -- 
@@ -25,7 +25,7 @@ function PPWM:create(pin, clock, current_duty, duty_limit)
   -- If we are currently running or not.
   running = true;
 
-  -- transition timer used to ensure we have a single timer and dont get stuck
+  -- transition timer used to ensure we have a single timer and don't get stuck
   -- in a loop.
   transition_timer = nil;
   }
@@ -38,7 +38,7 @@ function PPWM:create(pin, clock, current_duty, duty_limit)
   return this
 end
 
--- Stops the current proessing of the PWM data, marks internally that the PWM is not running and
+-- Stops the current processing of the PWM data, marks internally that the PWM is not running and
 -- calls into the module to stop the PWM.
 function PPWM:stop()
   if self.running then
@@ -48,7 +48,7 @@ function PPWM:stop()
 end
 
 -- Completely disconnects and quits the PWM mode for the current executing pin. Ensures to
--- stop/pause the processing of the data in pwm first before quiting the pwm mode for the current
+-- stop/pause the processing of the data in pwm first before quitting the pwm mode for the current
 -- pin.
 function PPWM:close()
   if self.running then
@@ -59,7 +59,7 @@ function PPWM:close()
 end
 
 -- updateExecutingPin takes in a new pin that will processing the PWM and if currently executing,
--- stops the current PWM (quiting), reconfigures and runs the pwm on the new pin and starts the
+-- stops the current PWM (quitting), reconfigures and runs the pwm on the new pin and starts the
 -- processing again.
 --
 -- pin {number}: The chip pin that is being setup for pwm processing.
@@ -148,7 +148,7 @@ function PPWM:decrease_duty(amount)
   self:update_duty(self:get_duty() - amount)
 end
 
--- returns the current dity on the current pin.
+-- returns the current duty on the current pin.
 function PPWM:get_duty()
   return pwm.getduty(self.executing_pin)
 end

@@ -4,6 +4,17 @@ local pwms = require("lib_ppwm");
 print("module load heap: " .. node.heap())
 
 local state = {
+  -- The auditing information and history for the keypad. Containing the upper
+  -- limit of the number of audits, or the history of the audit information.
+  audit = {
+    limit =  10;
+    history = {};
+    results = {
+      failed = "failed";
+      success = "success";
+    };
+  };
+
   -- The table of all the registered buttons of the application.
   buttons = {};
 
@@ -45,8 +56,18 @@ local state = {
     { 1, 2, 3, 4 },
     { 1, 2, 3, 4 },
     { 1, 2, 3, 4 },
-  }
+  };
 };
+
+-- Audit a given action for the keypad.
+--
+-- area    (string): The area the audit is taken place.
+-- result  (string): The result of the action being audited.
+-- message (string): The supporting message of the audit.
+local function audit_action(area, result, message)
+  if table.getn(state.audit.history) >= state.audit.limit then table.remove(1, state.audit.history) end
+  table.insert(state.audit.history, { area = area, result = result, message=message })
+end
 
 -- Transition all lights to a the given related state.
 --
@@ -61,22 +82,60 @@ local function transition_all_lights(yellow, green, red, white)
   state.lights.white:transition_to_duty(white);
 end
 
--- Transition the lights into a locked state, turning of all lights and ensuring
--- that the red light is on.
+-- Transition the lights into a locked state, turning of all lights off and
+-- ensuring that the red light is on.
 local function transition_to_locked_state()
-      transition_all_lights(0, 0, 400, 0);
+  transition_all_lights(0, 0, 400, 0);
+end
+
+-- Transition the lights into a sequence selection state, turning of all lights off and
+-- ensuring that the yellow light is on.
+local function transition_to_sequence_selection_state()
+  transition_all_lights(400, 0, 0, 0);
+end
+
+-- Transition the lights into profile selection state, turning of all lights off
+-- and ensuring that the white light is on.
+local function transition_to_profile_selection_state()
+  transition_all_lights(0, 0, 0, 400);
 end
 
 -- Triggered when any given button is pressed, this should handle all cases in
 -- which the button could be in, locked, selection, keypad unlocking, sequence.
 local function on_press(button)
   print("stage: " .. state.stage)
+
+  -- If the keycode is in a locked state, then no action can take place.
   if state.stage == state.stages.locked then
+      audit_action(state.stage, state.audit.results.failed, "keypad locked.");
       transition_to_locked_state();
     return
   end
 
+  -- If we are awaiting for a profile and a button is pressed, mark that as the
+  -- selected profile, shift into profile selection stage. Any input after will
+  -- be counted towards the lock sequence.
+  if state.stage == state.stages.awaiting_selection then
+      audit_action(state.stage, state.audit.results.success, "profile selection.");
+      transition_to_sequence_selection_state();
+      state.stage = state.stages.awaiting_pin;
+      state.selected_profile = button.id;
+      state.pin_selection = {};
+    return
+  end
 
+  -- If we are awaiting for pins then input another pin entry, if we have enough
+  -- pins, validate and unlock if possible, otherwise reset.
+  if state.stage == state.stages.awaiting_pin then
+      audit_action(state.stage, state.audit.results.success, "pin entry.");
+      table.insert(state.pin_selection, button.id);
+
+    if table.getn(state.pin_selection) == table.getn(state.buttons) then
+      audit_action(state.stage, state.audit.results.success, "pin complete, validating.");
+      transition_all_lights(0, 400, 0, 0);
+    end
+    return
+  end
 end
 
 local function on_long_press(button)
@@ -115,9 +174,7 @@ local function setup_and_register_buttons()
   -- Setup the default state, the user is awaiting to select a given profile
   -- that will be used to unlock the padlock.
   state.stage = state.stages.awaiting_selection;
-  transition_all_lights(0, 0, 0, 400);
-
-  state.stage = state.stages.locked;
+  transition_to_profile_selection_state();
 
   local button_timer = tmr.create()
   button_timer:register(100, 1, function()

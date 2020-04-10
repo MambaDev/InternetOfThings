@@ -1,7 +1,7 @@
 PPWM = {}
 PPWM.__index = PPWM
 
-function PPWM:create(pin, clock, current_duty)
+function PPWM:create(pin, clock, current_duty, duty_limit)
   local this = {
   -- This is the wdth of the pulse based on the hardware. This can be adjusted to determine the
   -- output power. e.g maximum duty cycle would be classed as "on" while 0 could be classed as
@@ -11,7 +11,7 @@ function PPWM:create(pin, clock, current_duty)
   -- Resolution is determined by the hardware.
   --
   -- The current duty cycle limit for the current board.
-  duty_cycle_limit = 1023;
+  duty_cycle_limit = duty_limit or 1023;
 
   -- The frequency the PWM is executing within.
   clock_cycle = clock or 1000;
@@ -124,7 +124,7 @@ function PPWM:transition_to_duty(duty, input_speed)
     if (not direction and self:get_duty() <= duty)
       or (direction and self:get_duty() >= duty) then
       self:clean_up_transition_timer()
-      self:update_duty(duty)
+      return self:update_duty(duty)
     end
 
     if direction then self:increase_duty(50)

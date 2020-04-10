@@ -2,23 +2,6 @@ local function on_press() end
 local function on_long_press() end
 local function on_release() end
 
-local function create_button(pin, press, long_press, released)
-  local this = {
-    pin = pin,
-    GPIO = gpio,
-    on_press = press,
-    on_released = released,
-    on_long_press = long_press,
-    pressed = 0,
-    my_timer_pressed = tmr.create(),
-    pressed_iteration_count = 0,
-    long_pressed = 0,
-    long_pressed_iteration = 10
-  }
-
-  return this
-end
-
 local function four_buttons_one_timer()
   local buttons = {
     create_button(1, on_release, on_long_press, on_release),

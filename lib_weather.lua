@@ -26,7 +26,7 @@ local function execute_and_decode(url, result_callback, error_callback)
   end)
 end
 
--- Gets the current wather for the city and country.
+-- Gets the current weather for the city and country.
 --
 -- city (string): The name of the city being gathered.
 -- country (string): The name of the country the city is based in.

@@ -18,8 +18,9 @@ print("compiling...")
 
 for k,v in pairs(source_files) do
   if k ~= "init.lua" and ends_with(k, ".lua") then
-     print(k .. "...")
-    node.compile(k)
+     print("compiling " .. k .. "...")
+     node.compile(k)
+     print("removing " .. k .. "...")
     file.remove(k)
   end
 end
@@ -28,4 +29,5 @@ print("compiling...complete")
 
 print("pre-heap: " .. node.heap())
 
-dofile("app.lc")
+local app = require('app');
+app.start();

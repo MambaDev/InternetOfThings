@@ -1,7 +1,37 @@
-local internet = require("lib_internet")
 local pwms = require("lib_ppwm");
 
 print("module load heap: " .. node.heap())
+
+
+-- configure sets up the events and handlers to ensure that we know when and if we are currently
+-- connected or not. Which can later be used to simlify the setup and connection of sockets, http
+-- clients and other systems.
+local function configure_station(ssid, password, bssid)
+  wifi.setmode(wifi.STATION)
+  wifi.sta.config({ssid=ssid, pwd=password, auto=false, bssid=bssid}) -- don't auto connect when we setup the conneciton details.
+end
+
+-- connect will attemp to make a connection to the Internet.connection, returning if no connection
+-- could be made (timeout) or a connection was made or determined to be connecetd. A boolean
+-- expression would be returned. connectedCallback is a function which will be called when the
+-- Internet.connection is conencted. disconnectedCallback is a function which will be called when
+-- the Internet.connection failed to connect.
+local function connect_station(connectedCallback, ipCallback, failedCallback)
+  wifi.sta.connect()
+
+  if connectedCallback ~= nil then
+    wifi.eventmon.register(wifi.eventmon.STA_CONNECTED, connectedCallback)
+  end
+
+  if ipCallback  ~= nil then
+    wifi.eventmon.register(wifi.eventmon.STA_GOT_IP, ipCallback)
+  end
+
+  if failedCallback ~= nil then
+    wifi.eventmon.register(wifi.eventmon.STA_DISCONNECTED, failedCallback)
+  end
+
+end
 
 local state = {
   -- The auditing information and history for the keypad. Containing the upper
@@ -58,6 +88,59 @@ local state = {
     { 1, 2, 3, 4 },
   };
 };
+
+-- Updates a given profile pin sequence based on a request from the server.
+--
+-- connection  (net): The network connection to reply to the user.
+-- profile     (number): The profile number being updated.
+-- updated_pin (number[]): The list of updated pins for the profile.
+local function update_pin_request(connection, profile, updated_pin)
+    print(profile, updated_pin);
+end
+
+local function tcp_receiver(sck, req)
+  if req == nil then return end
+
+  -- check if we can parse the json otherwise just return.
+  if not pcall(sjson.decode, req) then return end
+  local response = sjson.decode(req)
+
+  -- user has the possibility to update the country and city via the tcp socket.
+  if response.type ~= nil and response.type == "pin" then
+    return update_pin_request(sck, response.profile, response.pin);
+  end
+end
+
+-- Send back the current city, country alarm time and last triggered to any
+-- connecting client with tags to ensure the client reads it as html.
+local function tcp_connection(sck)
+   local response = {"HTTP/1.0 200 OK\r\nServer: NodeMCU on ESP8266\r\nContent-Type: text/html\r\n\r\n"}
+
+  response[#response + 1] ="<!DOCTYPE html>"
+  response[#response + 1] ="<html lang='en'>"
+  response[#response + 1] = "<head>"
+  response[#response + 1] = "<link rel='stylesheet' href='https://codepen.io/tehstun/pen/pojvKpd.css' />"
+  response[#response + 1] = "</head>"
+  response[#response + 1] = "<body>"
+  response[#response + 1] = "<script src='https://codepen.io/tehstun/pen/pojvKpd.js'></script>"
+  response[#response + 1] = "</body>"
+
+   -- sends and removes the first element from the 'response' table continues to
+   -- do this per entry per sent until empty, and closing the socket. This is
+   -- the recommended way to not have memory leaks.
+  local function send(localSocket)
+    if #response > 0 then localSocket:send(table.remove(response, 1))
+    else localSocket:close() response = nil end
+  end
+
+  sck:on("sent", send)
+  send(sck)
+end
+
+local function tcp_server_listen(conn)
+  conn:on("receive", tcp_receiver)
+  conn:on("connection", tcp_connection)
+end
 
 -- Audit a given action for the keypad.
 --
@@ -345,6 +428,10 @@ end
 local function on_start()
   print("ip: " .. internet.get_station_ip())
   setup_and_register_buttons()
+
+  
+  local tcp_server = net.createServer(net.TCP, 30)
+  tcp_server:listen(80, tcp_server_listen)
  end
 
 -- log the reason to why the application failed to connect to the internet, or
@@ -356,13 +443,17 @@ local function on_failed(reason) print("internet disconnected") end
 -- synchronization has been completed, start the application entry.
 local function on_internet_connected() on_start() end
 
--- 1 second before we start so we have a safe cutoff point, otherwise if a error
--- occurs, you can get stuck in a boot loop that is really hard to get out of.
+
+
+function START()
+  -- 1 second before we start so we have a safe cutoff point, otherwise if a error
+  -- occurs, you can get stuck in a boot loop that is really hard to get out of.
 local start_timer = tmr.create()
 
 start_timer:register(1000, tmr.ALARM_SINGLE,  function ()
-  internet.configure_station("The Promise Lan", "DangerZone2018", nil)
-  internet.connect_station(nil, on_internet_connected, on_failed)
+  configure_station("The Promise Lan", "DangerZone2018", nil)
+  connect_station(nil, on_internet_connected, on_failed)
 end)
 
 start_timer:start()
+end

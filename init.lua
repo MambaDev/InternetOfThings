@@ -26,8 +26,6 @@ for k,v in pairs(source_files) do
 end
 
 print("compiling...complete")
-
 print("pre-heap: " .. node.heap())
 
-local app = require('app');
-app.start();
+dofile('app')

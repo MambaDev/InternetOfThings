@@ -52,7 +52,7 @@ local state = {
 -- result  (string): The result of the action being audited.
 -- message (string): The supporting message of the audit.
 local function audit_action(area, result, message)
-    if table.getn(state.audit.history) >= 15 then
+    if table.getn(state.audit.history) >= 10 then
         table.remove(state.audit.history, 1)
     end
 
@@ -100,26 +100,23 @@ end
 -- Send back the current city, country alarm time and last triggered to any
 -- connecting client with tags to ensure the client reads it as html.
 local function tcp_connection(sck)
-    local response = {"HTTP/1.0 200 OK\r\nServer: NodeMCU on ESP8266\r\nContent-Type: text/html\r\n\r\n"}
-
-    response[#response + 1] = "<!DOCTYPE html>"
-    response[#response + 1] = "<html lang='en'>"
+    local response = {"HTTP/1.0 200 OK\r\nContent-Type: text/html\r\n\r\n"}
     response[#response + 1] = "<head>"
-    response[#response + 1] = "<link rel='stylesheet' href='https://codepen.io/tehstun/pen/pojvKpd.css' />"
+    response[#response + 1] = "<link href='https://unpkg.com/tailwindcss@^1.0/dist/tailwind.min.css' rel='stylesheet'>"
     response[#response + 1] = "</head>"
     response[#response + 1] = "<body>"
 
-    response[#response + 1] = "<div class='container' id='c'>"
-    response[#response + 1] = "<div class='card'>"
-    response[#response + 1] = "<table id='content-table'>"
+    response[#response + 1] = "<div id='c'>"
+    response[#response + 1] = "<div class='mx-auto max-w-2xl mt-4 rounded overflow-hidden shadow-lg'>"
+    response[#response + 1] = "<table class='table-auto'>"
     response[#response + 1] = "<tr>"
-    response[#response + 1] = "<th>Area</th>"
-    response[#response + 1] = "<th>Result</th>"
-    response[#response + 1] = "<th>Message</th>"
+    response[#response + 1] = "<th class='px-4 py-2'>Area</th>"
+    response[#response + 1] = "<th class='px-4 py-2'>Result</th>"
+    response[#response + 1] = "<th class='px-4 py-2'>Message</th>"
     response[#response + 1] = "</tr>"
 
     for k, v in pairs(state.audit.history) do
-        response[#response + 1] = "<tr><td>".. v.area .. "</td><td>".. v.result .."</td><td>" .. v.message .."</td></tr>"
+        response[#response + 1] = "<tr><td class='border px-4 py-2'>".. v.area .. "</td><td class='border px-4 py-2'>".. v.result .."</td><td class='border px-4 py-2'>" .. v.message .."</td></tr>"
     end
 
     response[#response + 1] = "</table>"

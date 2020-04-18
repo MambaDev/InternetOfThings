@@ -1,5 +1,3 @@
-local pwms = require("lib_ppwm")
-
 local state = {
     -- The auditing information and history for the keypad. Containing the upper
     -- limit of the number of audits, or the history of the audit information.
@@ -25,10 +23,10 @@ local state = {
     -- The allocated lights that will be used to keep the user aware of the
     -- current state. Yellow, green, red and white.
     lights = {
-        yellow = pwms:create(5, nil, 0),
-        green = pwms:create(6, nil, 0),
-        red = pwms:create(7, nil, 0),
-        white = pwms:create(8, nil, 0)
+        yellow = 5,
+        green = 6,
+        red = 7,
+        white = 8,
     },
     -- The currently selected id of the active profile, this will be used track
     -- what current profile is being used, to match up with the correct pin
@@ -54,7 +52,7 @@ local state = {
 -- result  (string): The result of the action being audited.
 -- message (string): The supporting message of the audit.
 local function audit_action(area, result, message)
-    if table.getn(state.audit.history) >= 10 then
+    if table.getn(state.audit.history) >= 15 then
         table.remove(state.audit.history, 1)
     end
 
@@ -69,7 +67,7 @@ end
 -- profile     (number): The profile number being updated.
 -- updated_pin (number[]): The list of updated pins for the profile.
 local function update_pin_request(connection, profile, updated_pin)
-    -- audit_action('profile', state.audit.results.success, 'profile ' .. profile .. ' pin updated.')
+    audit_action('profile', state.audit.results.success, 'profile ' .. profile .. ' pin updated.')
     state.profiles[profile] = updated_pin;
 end
 
@@ -183,10 +181,10 @@ end
 -- red    (number): The new duty of the red led.
 -- white  (number): The new duty of the white led.
 local function transition_all_lights(yellow, green, red, white)
-    state.lights.yellow:transition_to_duty(yellow)
-    state.lights.green:transition_to_duty(green)
-    state.lights.red:transition_to_duty(red)
-    state.lights.white:transition_to_duty(white)
+    if yellow then gpio.write(state.lights.yellow, gpio.HIGH) else gpio.write(state.lights.yellow, gpio.LOW); end
+    if green then gpio.write(state.lights.green, gpio.HIGH) else gpio.write(state.lights.green, gpio.LOW); end
+    if red then gpio.write(state.lights.red, gpio.HIGH) else gpio.write(state.lights.red, gpio.LOW); end
+    if white then gpio.write(state.lights.white, gpio.HIGH) else gpio.write(state.lights.white, gpio.LOW);end
 end
 
 -- Trigger the buzzer within the specified duration and interval.
@@ -218,14 +216,14 @@ end
 local function process_not_unlock_complete()
     local reset_keypad_timer = tmr.create()
 
-    transition_all_lights(0, 0, 400, 0)
+    transition_all_lights(false, false, true, false)
     update_stage(state.stages.locked)
 
     trigger_buzzer(4000, 1000)
 
     reset_keypad_timer:register( 1000 * 4, tmr.ALARM_SINGLE, function()
             update_stage(state.stages.awaiting_selection)
-            transition_all_lights(0, 0, 0, 400)
+            transition_all_lights(false, false, false, true)
 
             state.selected_profile = nil
             state.pin_selection = nil
@@ -241,13 +239,13 @@ local function process_unlock_complete()
     local reset_keypad_timer = tmr.create()
 
     update_stage(state.stages.unlocked)
-    transition_all_lights(0, 400, 0, 0)
+    transition_all_lights(false, true, false, false)
 
     trigger_buzzer(4000, 2000)
 
     reset_keypad_timer:register( 1000 * 4, tmr.ALARM_SINGLE, function()
             update_stage(state.stages.awaiting_selection)
-            transition_all_lights(0, 0, 0, 400)
+            transition_all_lights(false, false, false, true)
 
             state.selected_profile = nil
             state.pin_selection = nil
@@ -263,7 +261,7 @@ local function on_press(button)
     -- If the keypad is in a locked state, then no action can take place.
     if state.stage == state.stages.locked then
         audit_action(state.stage, state.audit.results.failed, "locked.")
-        transition_all_lights(0, 0, 400, 0)
+        transition_all_lights(false, false, true, false)
         return
     end
 
@@ -274,7 +272,7 @@ local function on_press(button)
         audit_action(state.stage, state.audit.results.success, "selected: " .. button.id)
         update_stage(state.stages.awaiting_pin)
 
-        transition_all_lights(400, 0, 0, 0)
+        transition_all_lights(true, false, false, false)
         state.selected_profile = button.id
         state.pin_selection = {}
         return
@@ -327,10 +325,15 @@ local function setup_and_register_buttons()
     table.insert(state.buttons, create_button(3, 3))
     table.insert(state.buttons, create_button(4, 4))
 
+    gpio.mode(state.lights.green, gpio.OUTPUT)
+    gpio.mode(state.lights.red, gpio.OUTPUT)
+    gpio.mode(state.lights.white, gpio.OUTPUT)
+    gpio.mode(state.lights.yellow, gpio.OUTPUT)
+
     -- Setup the default state, the user is awaiting to select a given profile
     -- that will be used to unlock the padlock.
     update_stage(state.stages.awaiting_selection)
-    transition_all_lights(0, 0, 0, 400)
+    transition_all_lights(false, false, false, true)
 
     local button_timer = tmr.create()
     button_timer:register( 100, 1, function()

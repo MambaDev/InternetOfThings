@@ -48,26 +48,50 @@ local state = {
     }
 }
 
+-- Audit a given action for the keypad.
+--
+-- area    (string): The area the audit is taken place.
+-- result  (string): The result of the action being audited.
+-- message (string): The supporting message of the audit.
+local function audit_action(area, result, message)
+    if table.getn(state.audit.history) >= 10 then
+        table.remove(state.audit.history, 1)
+    end
+
+    local audit_action = string.format("%s - %s - %s", area, result, message);
+    table.insert(state.audit.history, { area = area, result = result, message = message })
+    print(audit_action)
+end
+
 -- Updates a given profile pin sequence based on a request from the server.
 --
 -- connection  (net): The network connection to reply to the user.
 -- profile     (number): The profile number being updated.
 -- updated_pin (number[]): The list of updated pins for the profile.
 local function update_pin_request(connection, profile, updated_pin)
-    print(profile, updated_pin)
+    -- audit_action('profile', state.audit.results.success, 'profile ' .. profile .. ' pin updated.')
+    state.profiles[profile] = updated_pin;
 end
 
 local function tcp_receiver(sck, req)
-    print(req)
     if req == nil then
         return
     end
 
+    local next_val = false;
+    local input = nil;
+
+    for line in req:gmatch("([^\n]*)\n?") do
+        if next_val == true then input = line; break end
+        next_val = not (line ~= nil and line:match("%S") ~= nil)
+    end
+
     -- check if we can parse the json otherwise just return.
-    if not pcall(sjson.decode, req) then
+    if not pcall(sjson.decode, input) then
         return
     end
-    local response = sjson.decode(req)
+    local response = sjson.decode(input)
+    print(response);
 
     -- user has the possibility to update the country and city via the tcp socket.
     if response.type ~= nil and response.type == "pin" then
@@ -86,6 +110,24 @@ local function tcp_connection(sck)
     response[#response + 1] = "<link rel='stylesheet' href='https://codepen.io/tehstun/pen/pojvKpd.css' />"
     response[#response + 1] = "</head>"
     response[#response + 1] = "<body>"
+
+    response[#response + 1] = "<div class='container' id='c'>"
+    response[#response + 1] = "<div class='card'>"
+    response[#response + 1] = "<table id='content-table'>"
+    response[#response + 1] = "<tr>"
+    response[#response + 1] = "<th>Area</th>"
+    response[#response + 1] = "<th>Result</th>"
+    response[#response + 1] = "<th>Message</th>"
+    response[#response + 1] = "</tr>"
+
+    for k, v in pairs(state.audit.history) do
+        response[#response + 1] = "<tr><td>".. v.area .. "</td><td>".. v.result .."</td><td>" .. v.message .."</td></tr>"
+    end
+
+    response[#response + 1] = "</table>"
+    response[#response + 1] = "</div>"
+    response[#response + 1] = "</div>"
+  
     response[#response + 1] = "<script src='https://codepen.io/tehstun/pen/pojvKpd.js'></script>"
     response[#response + 1] = "</body>"
 
@@ -108,19 +150,6 @@ end
 local function tcp_server_listen(conn)
     conn:on("receive", tcp_receiver)
     conn:on("connection", tcp_connection)
-end
-
--- Audit a given action for the keypad.
---
--- area    (string): The area the audit is taken place.
--- result  (string): The result of the action being audited.
--- message (string): The supporting message of the audit.
-local function audit_action(area, result, message)
-    if table.getn(state.audit.history) >= 10 then
-        table.remove(state.audit.history, 1)
-    end
-
-    table.insert(state.audit.history, string.format("%s - %s - %s", area, result, message))
 end
 
 -- Takes in a list of codes and the corresponding matching codes, if all codes
@@ -193,14 +222,6 @@ local function process_not_unlock_complete()
     update_stage(state.stages.locked)
 
     trigger_buzzer(4000, 1000)
-
-    local trigger_buzzer_Timer = tmr.create()
-    trigger_buzzer_Timer:register(
-        100,
-        1,
-        function()
-        end
-    )
 
     reset_keypad_timer:register( 1000 * 4, tmr.ALARM_SINGLE, function()
             update_stage(state.stages.awaiting_selection)
@@ -384,5 +405,13 @@ local function start()
     wifi.eventmon.register(wifi.eventmon.STA_GOT_IP, on_start)
 end
 
+
+-- 1 second before we start so we have a safe cutoff point.
+local start_timer = tmr.create()
+
+start_timer:register(1000, tmr.ALARM_SINGLE,  function ()
 start();
+end)
+
+start_timer:start()
 

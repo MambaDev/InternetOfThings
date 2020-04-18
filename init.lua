@@ -22,12 +22,11 @@ local state = {
     stage = "awaiting_selection",
     -- The allocated lights that will be used to keep the user aware of the
     -- current state. Yellow, green, red and white.
-    lights = {
-        yellow = 5,
-        green = 6,
-        red = 7,
-        white = 8,
-    },
+    yellow = 5,
+    green = 6,
+    red = 7,
+    white = 8,
+    
     -- The currently selected id of the active profile, this will be used track
     -- what current profile is being used, to match up with the correct pin
     -- sequence.
@@ -52,7 +51,7 @@ local state = {
 -- result  (string): The result of the action being audited.
 -- message (string): The supporting message of the audit.
 local function audit_action(area, result, message)
-    if table.getn(state.audit.history) >= 15 then
+    if table.getn(state.audit.history) >= 10 then
         table.remove(state.audit.history, 1)
     end
 
@@ -100,26 +99,23 @@ end
 -- Send back the current city, country alarm time and last triggered to any
 -- connecting client with tags to ensure the client reads it as html.
 local function tcp_connection(sck)
-    local response = {"HTTP/1.0 200 OK\r\nServer: NodeMCU on ESP8266\r\nContent-Type: text/html\r\n\r\n"}
-
-    response[#response + 1] = "<!DOCTYPE html>"
-    response[#response + 1] = "<html lang='en'>"
+    local response = {"HTTP/1.0 200 OK\r\nContent-Type: text/html\r\n\r\n"}
     response[#response + 1] = "<head>"
-    response[#response + 1] = "<link rel='stylesheet' href='https://codepen.io/tehstun/pen/pojvKpd.css' />"
+    response[#response + 1] = "<link href='https://unpkg.com/tailwindcss@^1.0/dist/tailwind.min.css' rel='stylesheet'>"
     response[#response + 1] = "</head>"
     response[#response + 1] = "<body>"
 
-    response[#response + 1] = "<div class='container' id='c'>"
-    response[#response + 1] = "<div class='card'>"
-    response[#response + 1] = "<table id='content-table'>"
+    response[#response + 1] = "<div id='c'>"
+    response[#response + 1] = "<div class='mx-auto max-w-2xl mt-4 rounded overflow-hidden shadow-lg'>"
+    response[#response + 1] = "<table class='table-auto'>"
     response[#response + 1] = "<tr>"
-    response[#response + 1] = "<th>Area</th>"
-    response[#response + 1] = "<th>Result</th>"
-    response[#response + 1] = "<th>Message</th>"
+    response[#response + 1] = "<th class='px-4 py-2'>Area</th>"
+    response[#response + 1] = "<th class='px-4 py-2'>Result</th>"
+    response[#response + 1] = "<th class='px-4 py-2'>Message</th>"
     response[#response + 1] = "</tr>"
 
     for k, v in pairs(state.audit.history) do
-        response[#response + 1] = "<tr><td>".. v.area .. "</td><td>".. v.result .."</td><td>" .. v.message .."</td></tr>"
+        response[#response + 1] = "<tr><td class='border px-4 py-2'>".. v.area .. "</td><td class='border px-4 py-2'>".. v.result .."</td><td class='border px-4 py-2'>" .. v.message .."</td></tr>"
     end
 
     response[#response + 1] = "</table>"
@@ -181,10 +177,10 @@ end
 -- red    (number): The new duty of the red led.
 -- white  (number): The new duty of the white led.
 local function transition_all_lights(yellow, green, red, white)
-    if yellow then gpio.write(state.lights.yellow, gpio.HIGH) else gpio.write(state.lights.yellow, gpio.LOW); end
-    if green then gpio.write(state.lights.green, gpio.HIGH) else gpio.write(state.lights.green, gpio.LOW); end
-    if red then gpio.write(state.lights.red, gpio.HIGH) else gpio.write(state.lights.red, gpio.LOW); end
-    if white then gpio.write(state.lights.white, gpio.HIGH) else gpio.write(state.lights.white, gpio.LOW);end
+    if yellow then gpio.write(state.yellow, gpio.HIGH) else gpio.write(state.yellow, gpio.LOW); end
+    if green then gpio.write(state.green, gpio.HIGH) else gpio.write(state.green, gpio.LOW); end
+    if red then gpio.write(state.red, gpio.HIGH) else gpio.write(state.red, gpio.LOW); end
+    if white then gpio.write(state.white, gpio.HIGH) else gpio.write(state.white, gpio.LOW);end
 end
 
 -- Trigger the buzzer within the specified duration and interval.
@@ -325,10 +321,10 @@ local function setup_and_register_buttons()
     table.insert(state.buttons, create_button(3, 3))
     table.insert(state.buttons, create_button(4, 4))
 
-    gpio.mode(state.lights.green, gpio.OUTPUT)
-    gpio.mode(state.lights.red, gpio.OUTPUT)
-    gpio.mode(state.lights.white, gpio.OUTPUT)
-    gpio.mode(state.lights.yellow, gpio.OUTPUT)
+    gpio.mode(state.green, gpio.OUTPUT)
+    gpio.mode(state.red, gpio.OUTPUT)
+    gpio.mode(state.white, gpio.OUTPUT)
+    gpio.mode(state.yellow, gpio.OUTPUT)
 
     -- Setup the default state, the user is awaiting to select a given profile
     -- that will be used to unlock the padlock.

@@ -13,8 +13,8 @@ function M:create(host, port, username, key, name)
   local this = {
     host_address = host or 'io.adafruit.com';
     host_port = port or 1883;
-    host_username = username;
-    host_key = key;
+    host_username = username or nil;
+    host_key = key or nil;
     connected_client = nil;
     client = nil;
     name = name or "main";
@@ -46,7 +46,7 @@ function M:connect(on_connection)
   logger.debugf("%s - connecting, host: %s - port: %s",self.name, self.host_address, self.host_port)
   self.client:lwt("/lwt","Now offline",1,0)
 
-  self.client:connect(self.host_address, self.host_address, false, false, nil, function (reason)
+  self.client:connect(self.host_address, self.host_port, false, false, nil, function (reason)
       logger.debugf("%s - connecting failed, reason: %s", self.name, reason)
   end)
 

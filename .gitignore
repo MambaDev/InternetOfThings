@@ -2,6 +2,10 @@
 luac.out
 *.lc
 
+.idea
+.vs
+.vscode
+
 # luarocks build files
 *.src.rock
 *.zip
